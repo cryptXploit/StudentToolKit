@@ -1,11 +1,14 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Home, Calculator, Calendar, User } from 'lucide-react';
-import { ProfileScreen } from './features/profile/ProfileScreen';
-import { ToolsScreen } from './features/tools/ToolsScreen';
-import { TargetGPAScreen } from './features/tools/TargetGPAScreen';
-import { AttendanceScreen } from './features/tools/AttendanceScreen';
-import { HomeScreen } from './features/dashboard/HomeScreen';
-import { PlannerScreen } from './features/planner/PlannerScreen';
+
+// Lazy load screens (mapping named exports to default exports for React.lazy)
+const HomeScreen = lazy(() => import('./features/dashboard/HomeScreen').then(m => ({ default: m.HomeScreen })));
+const ToolsScreen = lazy(() => import('./features/tools/ToolsScreen').then(m => ({ default: m.ToolsScreen })));
+const TargetGPAScreen = lazy(() => import('./features/tools/TargetGPAScreen').then(m => ({ default: m.TargetGPAScreen })));
+const AttendanceScreen = lazy(() => import('./features/tools/AttendanceScreen').then(m => ({ default: m.AttendanceScreen })));
+const PlannerScreen = lazy(() => import('./features/planner/PlannerScreen').then(m => ({ default: m.PlannerScreen })));
+const ProfileScreen = lazy(() => import('./features/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 
 function Navigation() {
   const location = useLocation();
@@ -17,15 +20,15 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full bg-card border-t border-slate-200 dark:border-slate-800 pb-safe">
+    <nav className="fixed bottom-0 w-full bg-card border-t border-slate-200 dark:border-slate-800 pb-safe z-50">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
           const Icon = item.icon;
           return (
-            <Link className="flex flex-col items-center justify-center w-full h-full" key={item.path} to={item.path}>
+            <Link className="flex flex-col items-center justify-center w-full h-full active:scale-95 transition-transform" key={item.path} to={item.path}>
               <Icon className={isActive ? 'text-primary' : 'text-muted'} size={24} />
-              <span className={`text-xs mt-1 ${isActive ? 'text-primary font-medium' : 'text-muted'}`}>
+              <span className={`text-[10px] mt-1 ${isActive ? 'text-primary font-medium' : 'text-muted'}`}>
                 {item.label}
               </span>
             </Link>
@@ -36,21 +39,28 @@ function Navigation() {
   );
 }
 
-
+// Simple fallback for Suspense
+const ScreenLoader = () => (
+  <div className="flex items-center justify-center h-full w-full">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="h-screen flex flex-col overflow-hidden bg-background">
-        <main className="flex-1 overflow-y-auto pb-16">
-          <Routes>
-            <Route path="/" element={<HomeScreen />} />
-            <Route path="/tools" element={<ToolsScreen />} />
-            <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
-            <Route path="/tools/attendance" element={<AttendanceScreen />} />
-            <Route path="/planner" element={<PlannerScreen />} />
-            <Route path="/profile" element={<ProfileScreen />} />
-          </Routes>
+      <div className="h-screen flex flex-col overflow-hidden bg-background pt-safe">
+        <main className="flex-1 overflow-y-auto pb-20 relative">
+          <Suspense fallback={<ScreenLoader />}>
+            <Routes>
+              <Route path="/" element={<HomeScreen />} />
+              <Route path="/tools" element={<ToolsScreen />} />
+              <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
+              <Route path="/tools/attendance" element={<AttendanceScreen />} />
+              <Route path="/planner" element={<PlannerScreen />} />
+              <Route path="/profile" element={<ProfileScreen />} />
+            </Routes>
+          </Suspense>
         </main>
         <Navigation />
       </div>

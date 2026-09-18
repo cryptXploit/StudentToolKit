@@ -4,6 +4,8 @@ import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
 import { Calendar, Plus, Clock, CheckCircle2, Circle } from 'lucide-react';
 import { scheduleEventReminder } from '../../lib/notifications';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export function PlannerScreen() {
   const events = useLiveQuery(() => db.events.orderBy('date').toArray()) || [];
@@ -39,6 +41,9 @@ export function PlannerScreen() {
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: currentStatus ? ImpactStyle.Light : ImpactStyle.Medium }).catch(() => {});
+    }
     await db.events.update(id, { isCompleted: !currentStatus });
   };
 

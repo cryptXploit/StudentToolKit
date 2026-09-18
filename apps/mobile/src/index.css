@@ -2,28 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --primary: #2563eb;
-  --muted: #64748b;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #020617;
-    --foreground: #f8fafc;
-    --card: #0f172a;
-    --primary: #3b82f6;
-    --muted: #94a3b8;
+    --background: 210 40% 98%; /* slate-50 */
+    --foreground: 222.2 84% 4.9%; /* slate-950 */
+    --card: 0 0% 100%; /* white */
+    --primary: 221.2 83.2% 53.3%; /* blue-600 */
+    --muted: 215.4 16.3% 46.9%; /* slate-500 */
+  }
+  .dark {
+    --background: 222.2 84% 4.9%; /* slate-950 */
+    --foreground: 210 40% 98%; /* slate-50 */
+    --card: 222.2 84% 4.9%; /* slate-950 */
+    --primary: 217.2 91.2% 59.8%; /* blue-500 */
+    --muted: 215 20.2% 65.1%; /* slate-400 */
   }
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  @apply bg-background text-foreground;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Add to the bottom of index.css */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
