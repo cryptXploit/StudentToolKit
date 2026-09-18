@@ -1,0 +1,22 @@
+{
+  "name": "@student-os/engine",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@student-os/tsconfig": "workspace:*",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}
