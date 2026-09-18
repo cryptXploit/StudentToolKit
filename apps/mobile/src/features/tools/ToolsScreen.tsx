@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, CheckSquare } from 'lucide-react';
+import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 
 export function ToolsScreen() {
   const tools = [
@@ -22,6 +24,13 @@ export function ToolsScreen() {
       bg: 'bg-emerald-50 dark:bg-emerald-950/30'
     }
   ];
+
+  useEffect(() => {
+    showToolsBanner();
+    return () => {
+      hideToolsBanner();
+    };
+  }, []);
 
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto">

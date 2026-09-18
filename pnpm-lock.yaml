@@ -17,6 +17,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@capacitor-community/admob':
+        specifier: ^6.0.0
+        version: 6.2.0
       '@capacitor/android':
         specifier: ^6.0.0
         version: 6.2.2(@capacitor/core@6.2.2)
@@ -208,6 +211,10 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
+
+  '@capacitor-community/admob@6.2.0':
+    resolution: {integrity: sha512-Po+FXAs4XW2LOegEo1pBssXVjblzt2LeyCiQML9Ep/GnDZooI+ZTIpnB1yU6W3dVW8iO2FENkfWM+oE8O+fNSA==}
+    engines: {node: '>=18.0.0'}
 
   '@capacitor/android@6.2.2':
     resolution: {integrity: sha512-JjIu1ryNE16PQTp51rb4NEygxP7cSCDMmUqx4f5f12xscKdGKTjO9bkEP3TroLnTa/J6p2QopIhRbrd3E/7DrA==}
@@ -1761,6 +1768,10 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@capacitor-community/admob@6.2.0':
+    dependencies:
+      '@capacitor/core': 6.2.2
 
   '@capacitor/android@6.2.2(@capacitor/core@6.2.2)':
     dependencies:
