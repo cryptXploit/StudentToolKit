@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
 import { Calendar, Plus, Clock, CheckCircle2, Circle } from 'lucide-react';
+import { scheduleEventReminder } from '../../lib/notifications';
 
 export function PlannerScreen() {
   const events = useLiveQuery(() => db.events.orderBy('date').toArray()) || [];
@@ -17,14 +18,20 @@ export function PlannerScreen() {
     e.preventDefault();
     if (!title || !dateStr) return;
     
+    const newId = crypto.randomUUID();
+    const eventDateMs = new Date(dateStr).getTime();
+
     await db.events.put({
-      id: crypto.randomUUID(),
+      id: newId,
       title: title.trim(),
-      date: new Date(dateStr).getTime(),
+      date: eventDateMs,
       type,
       isCompleted: false,
       createdAt: Date.now()
     });
+    
+    // Schedule the local native notification
+    await scheduleEventReminder(newId, title.trim(), eventDateMs, type);
     
     setTitle('');
     setDateStr('');
