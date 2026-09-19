@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateSemesterGPA } from '@student-os/engine';
 import { Card, Input, Button, Alert } from '@student-os/ui';
-import { ArrowLeft, Trash2, Plus, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, AlertCircle, ChevronRight } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
 
@@ -154,20 +154,26 @@ export function SemesterDetailScreen() {
           </div>
         ) : (
           courses.map(course => (
-            <Card key={course.id} className="flex items-center justify-between p-3">
-              <div>
-                <h3 className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</h3>
-                <p className="text-xs text-muted mt-0.5">
-                  {course.credit} Credits
-                  {typeof course.grade === 'number' && ` • Grade: ${course.grade}`}
-                </p>
-              </div>
+            <Card key={course.id} className="flex items-center justify-between p-1 overflow-hidden group">
+              <Link to={`/course/${course.id}`} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg">
+                <div>
+                  <h3 className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</h3>
+                  <p className="text-xs text-muted mt-0.5">
+                    {course.credit} Credits
+                    {typeof course.grade === 'number' && ` • Grade: ${course.grade}`}
+                  </p>
+                </div>
+                <ChevronRight size={20} className="text-muted opacity-50" />
+              </Link>
               <Button 
                 variant="ghost" 
-                className="p-2 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
-                onClick={() => handleDeleteCourse(course.id)}
+                className="p-3 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteCourse(course.id);
+                }}
               >
-                <Trash2 size={18} />
+                <Trash2 size={20} />
               </Button>
             </Card>
           ))
