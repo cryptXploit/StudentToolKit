@@ -68,7 +68,7 @@ export function TranscriptScreen() {
         ) : (
           semesters.map(semester => (
             <Card key={semester.id} className="flex items-center justify-between p-1 overflow-hidden group">
-              <Link to={`#`} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg">
+              <Link to={`/transcript/${semester.id}`} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg">
                 <span className="font-semibold text-foreground">{semester.name}</span>
                 <ChevronRight size={20} className="text-muted opacity-50" />
               </Link>

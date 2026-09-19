@@ -16,6 +16,7 @@ const CumulativeCGPAScreen = lazy(() => import('./features/tools/CumulativeCGPAS
 const PlannerScreen = lazy(() => import('./features/planner/PlannerScreen').then(m => ({ default: m.PlannerScreen })));
 const ProfileScreen = lazy(() => import('./features/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 const TranscriptScreen = lazy(() => import('./features/transcript/TranscriptScreen').then(m => ({ default: m.TranscriptScreen })));
+const SemesterDetailScreen = lazy(() => import('./features/transcript/SemesterDetailScreen').then(m => ({ default: m.SemesterDetailScreen })));
 
 function Navigation() {
   const location = useLocation();
@@ -65,6 +66,7 @@ function AppRouterContent() {
             <Routes>
               <Route path="/" element={<HomeScreen />} />
               <Route path="/transcript" element={<TranscriptScreen />} />
+              <Route path="/transcript/:semesterId" element={<SemesterDetailScreen />} />
               <Route path="/tools" element={<ToolsScreen />} />
               <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
