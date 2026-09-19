@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
 import { calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
+import { Preferences } from '@capacitor/preferences';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
 
@@ -226,6 +227,38 @@ export function HomeScreen() {
     { label: 'Attendance', icon: CheckSquare, path: '/tools/attendance', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
     { label: 'All Tools', icon: Calculator, path: '/tools', color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800' },
   ];
+
+  useEffect(() => {
+    const syncWidget = async () => {
+      let title = "No urgent tasks";
+      let subtitle = "Enjoy your free time!";
+
+      if (dashboardData && dashboardData.attentionItems.length > 0) {
+        const topItem = dashboardData.attentionItems[0];
+        title = topItem.title;
+        subtitle = topItem.subtitle;
+      } else if (todaysClasses && todaysClasses.length > 0) {
+        const nextClass = todaysClasses[0];
+        title = `Today: ${nextClass.courseName}`;
+        subtitle = `${nextClass.startTime} - ${nextClass.endTime} ${nextClass.roomNumber ? `• ${nextClass.roomNumber}` : ''}`;
+      } else if (dashboardData && dashboardData.upcomingEvents.length > 0) {
+        const nextEvent = dashboardData.upcomingEvents[0];
+        const daysLeft = calculateDaysRemaining(nextEvent.event.date);
+        title = `Upcoming: ${nextEvent.event.title}`;
+        subtitle = `${nextEvent.course?.name || 'Task'} in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`;
+      }
+
+      try {
+        await Preferences.set({
+          key: 'widget_data_sync',
+          value: JSON.stringify({ title, subtitle })
+        });
+      } catch (e) {
+        console.error("Failed to sync widget data:", e);
+      }
+    };
+    syncWidget();
+  }, [dashboardData, todaysClasses]);
 
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
