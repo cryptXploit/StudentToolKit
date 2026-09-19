@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { Link } from 'react-router-dom';
-import { Calculator, CheckSquare, Target, GraduationCap, ChevronRight, AlertCircle } from 'lucide-react';
-import { Card } from '@student-os/ui';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calculator, CheckSquare, Target, GraduationCap, ChevronRight } from 'lucide-react';
+import { Card, Button } from '@student-os/ui';
 
 export function HomeScreen() {
+  const navigate = useNavigate();
   const profile = useLiveQuery(() => db.profile.get('me'));
   const [greeting, setGreeting] = useState('Welcome');
   const [dateString, setDateString] = useState('');
@@ -40,13 +41,20 @@ export function HomeScreen() {
         </div>
         
         {!profile ? (
-          <Link to="/profile" className="block active:scale-[0.98] transition-transform">
-            <Card className="border-dashed border-slate-300 dark:border-slate-700 p-5 text-center">
-              <AlertCircle className="mx-auto text-muted mb-2" size={28} />
-              <h3 className="font-medium text-foreground mb-1">Profile Incomplete</h3>
-              <p className="text-sm text-muted">Tap here to set your university and target goals.</p>
-            </Card>
-          </Link>
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-foreground mb-2">Welcome to Student OS</h3>
+            <p className="text-sm text-muted mb-6 leading-relaxed">
+              Your offline academic decision engine. All calculations happen instantly and securely on this device.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button onClick={() => navigate('/tools/target-gpa')} variant="primary" className="w-full py-2.5">
+                Run a Calculation
+              </Button>
+              <Button onClick={() => navigate('/profile')} variant="secondary" className="w-full py-2.5">
+                Set up Academic Profile
+              </Button>
+            </div>
+          </Card>
         ) : (
           <Card className="p-5">
             <div className="flex items-center mb-4 pb-4 border-b border-slate-100 dark:border-slate-800/50">

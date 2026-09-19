@@ -79,7 +79,13 @@ export function ProfileScreen() {
     <div className="p-4 sm:p-6 max-w-md mx-auto">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">Academic Profile</h1>
-        <p className="text-muted text-sm mt-1">Set your context for accurate calculations.</p>
+        <p className="text-muted text-sm mt-1 mb-3">Set your context for accurate calculations.</p>
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-3 flex items-start">
+          <Shield className="mr-2 mt-0.5 shrink-0" size={16} />
+          <p className="text-xs leading-relaxed opacity-90">
+            Your data never leaves this device. We use this context to provide smarter default values in your calculators.
+          </p>
+        </div>
       </header>
 
       <div className="space-y-4">
