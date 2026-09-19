@@ -168,6 +168,43 @@ export function CourseDetailScreen() {
     return `${h12}:${m} ${suffix}`;
   };
 
+  const nearestExam = useMemo(() => {
+    if (!courseEvents || courseEvents.length === 0) return null;
+    const nextEvent = courseEvents[0];
+    if (nextEvent.type === 'exam') return nextEvent;
+    return null;
+  }, [courseEvents]);
+
+  const [newChecklistTitle, setNewChecklistTitle] = useState('');
+
+  const handleAddChecklist = async (examId: string, currentChecklist: any[]) => {
+    if (!newChecklistTitle.trim()) return;
+    try {
+      const updatedChecklist = [...(currentChecklist || []), {
+        id: generateSafeId(),
+        title: newChecklistTitle.trim(),
+        isCompleted: false
+      }];
+      await db.events.update(examId, { checklist: updatedChecklist });
+      setNewChecklistTitle('');
+      hapticImpact('light');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleToggleChecklist = async (examId: string, currentChecklist: any[], itemId: string) => {
+    try {
+      const updatedChecklist = currentChecklist.map(item => 
+        item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
+      );
+      await db.events.update(examId, { checklist: updatedChecklist });
+      hapticImpact('light');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   if (course === undefined) {
     return (
       <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex items-center justify-center">
@@ -197,6 +234,78 @@ export function CourseDetailScreen() {
           <p className="text-muted-foreground text-sm mt-0.5">Timetable Builder</p>
         </div>
       </header>
+
+      {(() => {
+        if (!nearestExam) return null;
+        const daysLeft = calculateDaysRemaining(nearestExam.date);
+        const checklist = nearestExam.checklist || [];
+
+        return (
+          <div className="mb-6">
+            <Card className="p-5 border-2 border-primary/20 bg-primary/5 dark:bg-primary/10 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Exam Mode Active</h2>
+                  <h3 className="text-lg font-semibold text-foreground">{nearestExam.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : daysLeft < 0 ? 'Overdue' : `In ${daysLeft} days`} • {new Date(nearestExam.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <AlertCircle className="text-primary opacity-50" size={32} />
+              </div>
+
+              <div className="space-y-3 mt-4 pt-4 border-t border-primary/10">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Readiness Checklist</h4>
+                
+                {checklist.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">Add topics to track your exam readiness.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {checklist.map((item: any) => (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleToggleChecklist(nearestExam.id, checklist, item.id)}
+                          className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${item.isCompleted ? 'bg-primary border-primary text-primary-foreground' : 'border-slate-300 dark:border-slate-600'}`}
+                        >
+                          {item.isCompleted && <CheckCircle size={14} />}
+                        </button>
+                        <span className={`text-sm flex-1 ${item.isCompleted ? 'text-muted-foreground line-through opacity-70' : 'text-foreground'}`}>
+                          {item.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2 mt-3">
+                  <Input 
+                    value={newChecklistTitle}
+                    onChange={(e) => setNewChecklistTitle(e.target.value)}
+                    placeholder="Add syllabus topic..."
+                    className="flex-1 h-9 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddChecklist(nearestExam.id, checklist);
+                      }
+                    }}
+                  />
+                  <Button 
+                    type="button"
+                    variant="secondary" 
+                    className="h-9 px-3 shrink-0"
+                    disabled={!newChecklistTitle.trim()}
+                    onClick={() => handleAddChecklist(nearestExam.id, checklist)}
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        );
+      })()}
 
       <form onSubmit={handleAddRoutine}>
         <Card className="p-4 mb-6 space-y-4">

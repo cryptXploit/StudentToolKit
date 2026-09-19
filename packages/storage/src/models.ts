@@ -60,6 +60,7 @@ export interface AcademicEvent {
   date: number; // Unix timestamp
   type: 'exam' | 'assignment' | 'other';
   isCompleted: boolean;
+  checklist?: { id: string; title: string; isCompleted: boolean }[];
   createdAt: number;
 }
 
