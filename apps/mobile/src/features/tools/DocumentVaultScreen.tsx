@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db } from '@student-os/storage';
 import { Trash2, FolderLock, ArrowLeft, ChevronRight, FileText, Image as ImageIcon, BookOpen, FileUp, Folder } from 'lucide-react';
 import { Card, Input, Button, Alert } from '@student-os/ui';
@@ -14,10 +14,22 @@ function generateSafeId() {
 
 export function DocumentVaultScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Drill-Down State as Requested
   const [selectedSemester, setSelectedSemester] = useState<any | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
+
+  useEffect(() => {
+    const state = location.state as any;
+    if (state && state.initialSemesterId && state.initialCourseId) {
+      setSelectedSemester({ id: state.initialSemesterId, name: 'Semester' });
+      setSelectedCourse({ id: state.initialCourseId, name: state.initialCourseName || 'Course' });
+      
+      // Clear state so manual back navigation doesn't get stuck
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
 
   // Data State
   const [semesters, setSemesters] = useState<any[] | undefined>(undefined);

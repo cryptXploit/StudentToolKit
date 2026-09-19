@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateAttendancePercentage, calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
-import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle, Folder, ChevronRight } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
 import { scheduleRoutineReminder, cancelRoutineReminder } from '../../lib/notifications';
@@ -55,6 +55,16 @@ export function CourseDetailScreen() {
     } catch (e) {
       console.error("Dexie Query Failed:", e);
       return [];
+    }
+  }, [courseId]);
+
+  const docCount = useLiveQuery(async () => {
+    try {
+      if (!db || !courseId) return 0;
+      return await db.documents.where({ courseId }).count();
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return 0;
     }
   }, [courseId]);
 
@@ -442,6 +452,25 @@ export function CourseDetailScreen() {
             </Card>
           ))
         )}
+      </div>
+
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+        <h3 className="text-sm font-medium text-foreground mb-1">Course Documents</h3>
+        <Card 
+          className="p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform" 
+          onClick={() => navigate('/tools/vault', { state: { initialSemesterId: course?.semesterId, initialCourseId: course?.id, initialCourseName: course?.name } })}
+        >
+          <div className="flex items-center">
+            <div className="bg-primary/10 p-2.5 rounded-lg mr-3 text-primary">
+              <Folder size={20} />
+            </div>
+            <span className="font-semibold text-foreground">Course Vault</span>
+          </div>
+          <div className="flex items-center text-muted-foreground">
+            <span className="text-sm font-medium mr-2">{docCount === undefined ? '...' : `${docCount} file${docCount === 1 ? '' : 's'}`}</span>
+            <ChevronRight size={18} className="opacity-50" />
+          </div>
+        </Card>
       </div>
 
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
