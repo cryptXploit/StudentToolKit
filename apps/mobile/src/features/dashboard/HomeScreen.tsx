@@ -4,7 +4,7 @@ import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin, CheckCircle, XCircle } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
-import { calculateDaysRemaining } from '@student-os/engine';
+import { calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
 
@@ -52,6 +52,7 @@ export function HomeScreen() {
     let slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
     const allCourses = await db.courses.toArray();
     const todaysLogs = await db.attendance.where({ date: today }).toArray();
+    const allAttendance = await db.attendance.toArray();
     
     if (activeSemesterId) {
       const activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
@@ -65,10 +66,27 @@ export function HomeScreen() {
     const classesWithCourses = slots.map((slot) => {
       const course = allCourses.find(c => c.id === slot.courseId);
       const log = todaysLogs.find(l => l.courseId === slot.courseId);
+      
+      const courseLogs = allAttendance.filter(l => l.courseId === slot.courseId);
+      let attended = 0;
+      let total = 0;
+      for (const cl of courseLogs) {
+        if (cl.status === 'present' || cl.status === 'late') { attended++; total++; }
+        else if (cl.status === 'absent') { total++; }
+      }
+      
+      let predictiveStats = null;
+      if (total > 0) {
+        try {
+          predictiveStats = calculateAttendanceStatus({ attended, total, targetPercentage: profileContext?.targetAttendancePercentage || 75 });
+        } catch (e) {}
+      }
+
       return { 
         ...slot, 
         courseName: course?.name || 'Unknown Course',
-        todayLog: log 
+        todayLog: log,
+        predictiveStats
       };
     });
     
@@ -241,7 +259,16 @@ export function HomeScreen() {
           <div className="space-y-4">
             {todaysClasses.map(slot => (
               <Card key={slot.id} className="p-4 border-l-4 border-l-primary">
-                <h3 className="font-bold text-foreground text-lg mb-2">{slot.courseName}</h3>
+                <div className="flex justify-between items-start mb-2 gap-2">
+                  <h3 className="font-bold text-foreground text-lg leading-tight">{slot.courseName}</h3>
+                  {slot.predictiveStats ? (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground whitespace-nowrap shrink-0 mt-0.5">
+                      {slot.predictiveStats.currentPercentage}% • {slot.predictiveStats.safeMisses > 0 ? `Skip ${slot.predictiveStats.safeMisses}` : slot.predictiveStats.requiredClasses > 0 ? `Need ${slot.predictiveStats.requiredClasses}` : 'At limit'}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground whitespace-nowrap shrink-0 mt-0.5">100%</span>
+                  )}
+                </div>
                 <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <Clock size={14} className="mr-2 opacity-70" />

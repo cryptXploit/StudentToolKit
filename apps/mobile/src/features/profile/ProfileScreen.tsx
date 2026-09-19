@@ -18,6 +18,7 @@ export function ProfileScreen() {
   const [targetCGPA, setTargetCGPA] = useState('');
   const [currentCGPA, setCurrentCGPA] = useState('');
   const [totalCredits, setTotalCredits] = useState('');
+  const [targetAttendance, setTargetAttendance] = useState('75');
   const [isSaved, setIsSaved] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +31,7 @@ export function ProfileScreen() {
       if (profile.targetCGPA) setTargetCGPA(profile.targetCGPA.toFixed(2));
       if (profile.currentCGPA) setCurrentCGPA(profile.currentCGPA.toString());
       if (profile.totalCredits) setTotalCredits(profile.totalCredits.toString());
+      if (profile.targetAttendancePercentage) setTargetAttendance(profile.targetAttendancePercentage.toString());
     }
   }, [profile]);
 
@@ -38,12 +40,14 @@ export function ProfileScreen() {
     
     await db.profile.put({
       id: 'me',
+      activeSemesterId: existingProfile?.activeSemesterId,
       universityName: universityName.trim(),
       department: department.trim(),
       maxGradingScale: parseFloat(maxScale) || 4.0,
       targetCGPA: targetCGPA ? parseFloat(targetCGPA) : undefined,
       currentCGPA: isGpaAutoCalculated ? existingProfile?.currentCGPA : (currentCGPA ? parseFloat(currentCGPA) : undefined),
       totalCredits: isGpaAutoCalculated ? existingProfile?.totalCredits : (totalCredits ? parseFloat(totalCredits) : undefined),
+      targetAttendancePercentage: targetAttendance ? parseFloat(targetAttendance) : 75,
       updatedAt: Date.now(),
     });
     
@@ -121,6 +125,16 @@ export function ProfileScreen() {
               placeholder="e.g. ICE"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
+            />
+          </div>
+          <div className="pt-2">
+            <Label>
+              <Check className="mr-2 text-primary" size={16} />
+              Target Attendance %
+            </Label>
+            <Input
+              type="number" step="1" min="1" max="100"
+              placeholder="e.g. 75" value={targetAttendance} onChange={(e) => setTargetAttendance(e.target.value)}
             />
           </div>
         </Card>

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { calculateAttendancePercentage, calculateDaysRemaining } from '@student-os/engine';
+import { calculateAttendancePercentage, calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
@@ -18,6 +18,8 @@ export function CourseDetailScreen() {
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
+
+  const profile = useLiveQuery(() => db.profile.get('me'));
 
   const course = useLiveQuery(async () => {
     try {
@@ -65,11 +67,28 @@ export function CourseDetailScreen() {
     }
   }, [courseId]);
 
-  // calculate attendance on the fly
-  const currentPercentage = useMemo(() => 
-    calculateAttendancePercentage(attendanceLogs || []),
-    [attendanceLogs]
-  );
+  const predictiveStats = useMemo(() => {
+    if (!attendanceLogs || attendanceLogs.length === 0) return null;
+    let attended = 0;
+    let total = 0;
+    for (const log of attendanceLogs) {
+      if (log.status === 'present' || log.status === 'late') {
+        attended++;
+        total++;
+      } else if (log.status === 'absent') {
+        total++;
+      }
+    }
+    if (total === 0) return null;
+    try {
+      const target = profile?.targetAttendancePercentage || 75;
+      return calculateAttendanceStatus({ attended, total, targetPercentage: target });
+    } catch (e) {
+      return null;
+    }
+  }, [attendanceLogs, profile]);
+
+  const currentPercentage = predictiveStats ? predictiveStats.currentPercentage : calculateAttendancePercentage(attendanceLogs || []);
 
   const handleLogAttendance = async (status: 'present' | 'absent' | 'late') => {
     if (!courseId) return;
@@ -321,11 +340,22 @@ export function CourseDetailScreen() {
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
         <h3 className="text-sm font-medium text-foreground mb-1">Attendance Tracker</h3>
         
-        <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary">
+        <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary relative">
           <p className="text-sm text-muted-foreground mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
-          <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-muted-foreground opacity-50' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
+          <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-muted-foreground opacity-50' : (currentPercentage < (profile?.targetAttendancePercentage || 75)) ? 'text-red-500' : 'text-emerald-500'}`}>
             {attendanceLogs && attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
           </div>
+          {predictiveStats && (
+            <div className="mt-3 text-sm font-medium">
+              {predictiveStats.safeMisses > 0 ? (
+                <span className="text-emerald-500">Safe to miss: {predictiveStats.safeMisses}</span>
+              ) : predictiveStats.requiredClasses > 0 ? (
+                <span className="text-red-500">Must attend next {predictiveStats.requiredClasses}</span>
+              ) : (
+                <span className="text-muted-foreground">Exactly at threshold</span>
+              )}
+            </div>
+          )}
         </Card>
 
         <div className="grid grid-cols-3 gap-2">
