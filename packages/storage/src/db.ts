@@ -71,3 +71,8 @@ export class StudentDatabase extends Dexie {
 }
 
 export const db = new StudentDatabase();
+
+db.open().catch(err => {
+  console.error("Dexie failed to open:", err);
+  alert("CRITICAL DB ERROR: " + err.message);
+});
