@@ -9,6 +9,8 @@ import { Link } from 'react-router-dom';
 
 export function ProfileScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
+  const courseCount = useLiveQuery(() => db.courses.count());
+  const isGpaAutoCalculated = (courseCount || 0) > 0;
   
   const [universityName, setUniversityName] = useState('');
   const [department, setDepartment] = useState('');
@@ -32,14 +34,16 @@ export function ProfileScreen() {
   }, [profile]);
 
   const handleSave = async () => {
+    const existingProfile = await db.profile.get('me');
+    
     await db.profile.put({
       id: 'me',
       universityName: universityName.trim(),
       department: department.trim(),
       maxGradingScale: parseFloat(maxScale) || 4.0,
       targetCGPA: targetCGPA ? parseFloat(targetCGPA) : undefined,
-      currentCGPA: currentCGPA ? parseFloat(currentCGPA) : undefined,
-      totalCredits: totalCredits ? parseFloat(totalCredits) : undefined,
+      currentCGPA: isGpaAutoCalculated ? existingProfile?.currentCGPA : (currentCGPA ? parseFloat(currentCGPA) : undefined),
+      totalCredits: isGpaAutoCalculated ? existingProfile?.totalCredits : (totalCredits ? parseFloat(totalCredits) : undefined),
       updatedAt: Date.now(),
     });
     
@@ -157,6 +161,8 @@ export function ProfileScreen() {
               <Input
                 type="number" step="0.01" min="0" max="10.0"
                 placeholder="e.g. 3.20" value={currentCGPA} onChange={(e) => setCurrentCGPA(e.target.value)}
+                disabled={isGpaAutoCalculated}
+                className={isGpaAutoCalculated ? "opacity-60 bg-slate-50 dark:bg-slate-900 cursor-not-allowed" : ""}
               />
             </div>
             <div>
@@ -167,9 +173,16 @@ export function ProfileScreen() {
               <Input
                 type="number" step="0.5" min="0"
                 placeholder="e.g. 90" value={totalCredits} onChange={(e) => setTotalCredits(e.target.value)}
+                disabled={isGpaAutoCalculated}
+                className={isGpaAutoCalculated ? "opacity-60 bg-slate-50 dark:bg-slate-900 cursor-not-allowed" : ""}
               />
             </div>
           </div>
+          {isGpaAutoCalculated && (
+            <p className="text-xs text-muted-foreground mt-2">
+              🔒 Your CGPA and Total Credits are automatically calculated from your Memory/Transcript.
+            </p>
+          )}
         </Card>
       </div>
 
