@@ -32,13 +32,22 @@ export async function syncTranscriptToProfile() {
     grandCredits = semesterRecords.reduce((sum, s) => sum + s.credit, 0);
   }
 
-  const profile = await db.profile.get('me');
+  try {
+    const existingProfile = await db.profile.get('me');
+    const profileToSave = existingProfile || { 
+      id: 'me', 
+      maxGradingScale: 4.0, 
+      updatedAt: Date.now() 
+    };
 
-  await db.profile.put({
-    ...(profile || { maxGradingScale: 4.0, updatedAt: Date.now() }),
-    id: 'me',
-    currentCGPA: grandCGPA > 0 ? grandCGPA : undefined,
-    totalCredits: grandCredits > 0 ? grandCredits : undefined,
-    updatedAt: Date.now()
-  });
+    await db.profile.put({
+      ...profileToSave,
+      id: 'me',
+      currentCGPA: grandCGPA > 0 ? grandCGPA : undefined,
+      totalCredits: grandCredits > 0 ? grandCredits : undefined,
+      updatedAt: Date.now()
+    });
+  } catch (error) {
+    console.error('Failed to sync transcript to profile', error);
+  }
 }

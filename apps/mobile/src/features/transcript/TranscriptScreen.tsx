@@ -4,6 +4,7 @@ import { db } from '@student-os/storage';
 import { BookOpen, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { Card, Input, Button } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
+import { syncTranscriptToProfile } from '../../lib/sync';
 import { Link } from 'react-router-dom';
 
 export function TranscriptScreen() {
@@ -33,6 +34,7 @@ export function TranscriptScreen() {
       await db.courses.where({ semesterId: id }).delete();
       await db.semesters.delete(id);
     });
+    await syncTranscriptToProfile();
   };
 
   return (

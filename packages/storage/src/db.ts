@@ -35,7 +35,8 @@ export class StudentDatabase extends Dexie {
       profile: 'id',
       events: 'id, date, isCompleted',
       semesters: 'id',
-      courses: 'id, semesterId' // Index semesterId for fast relational queries
+      courses: 'id, semesterId', // Index semesterId for fast relational queries
+      attendance: 'id, courseId' // Must keep attendance here so it is not dropped during V2->V3 migration!
     });
 
     // V4 Schema - Routine and Attendance Schema

@@ -89,6 +89,13 @@ function AppRouterContent() {
 
 export default function App() {
   React.useEffect(() => {
+    // Request persistent storage to prevent browser from wiping IndexedDB to save space
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(granted => {
+        console.log('Persistent storage granted:', granted);
+      }).catch(console.error);
+    }
+
     if (Capacitor.isNativePlatform()) {
       try {
         SplashScreen.hide();
