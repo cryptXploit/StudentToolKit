@@ -19,6 +19,10 @@ export function CourseDetailScreen() {
   const [endTime, setEndTime] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
 
+  const [simAttended, setSimAttended] = useState(0);
+  const [simMissed, setSimMissed] = useState(0);
+  const [isSimulating, setIsSimulating] = useState(false);
+
   const profile = useLiveQuery(() => db.profile.get('me'));
 
   const course = useLiveQuery(async () => {
@@ -89,6 +93,36 @@ export function CourseDetailScreen() {
   }, [attendanceLogs, profile]);
 
   const currentPercentage = predictiveStats ? predictiveStats.currentPercentage : calculateAttendancePercentage(attendanceLogs || []);
+
+  const simulatedStats = useMemo(() => {
+    if (!attendanceLogs) return null;
+    
+    // Create mock logs
+    const mockLogs: { status: string }[] = [...attendanceLogs];
+    for (let i = 0; i < simAttended; i++) mockLogs.push({ status: 'present' });
+    for (let i = 0; i < simMissed; i++) mockLogs.push({ status: 'absent' });
+    
+    let attended = 0;
+    let total = 0;
+    for (const log of mockLogs) {
+      if (log.status === 'present' || log.status === 'late') {
+        attended++;
+        total++;
+      } else if (log.status === 'absent') {
+        total++;
+      }
+    }
+    
+    if (total === 0) return { currentPercentage: 0, safeMisses: 0, requiredClasses: 0, total: 0 };
+    
+    try {
+      const target = profile?.targetAttendancePercentage || 75;
+      const stats = calculateAttendanceStatus({ attended, total, targetPercentage: target });
+      return { ...stats, total };
+    } catch (e) {
+      return null;
+    }
+  }, [attendanceLogs, profile, simAttended, simMissed]);
 
   const handleLogAttendance = async (status: 'present' | 'absent' | 'late') => {
     if (!courseId) return;
@@ -493,6 +527,107 @@ export function CourseDetailScreen() {
             <span className="text-[11px] font-medium">Late</span>
           </Button>
         </div>
+
+        <div className="flex justify-center mt-2">
+          <button 
+            type="button"
+            onClick={() => setIsSimulating(!isSimulating)}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            {isSimulating ? 'Close Simulator' : 'Run What-If Scenario'}
+          </button>
+        </div>
+
+        {isSimulating && simulatedStats && (
+          <Card className="p-5 mt-2 border-2 border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">What-If Simulator</h4>
+                <p className="text-sm text-muted-foreground">Project your future percentage.</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="h-7 px-2 text-xs text-muted-foreground"
+                onClick={() => {
+                  setSimAttended(0);
+                  setSimMissed(0);
+                  setIsSimulating(false);
+                }}
+              >
+                Reset
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Future Attended</span>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="secondary" 
+                    className="h-8 w-8 p-0 rounded-full"
+                    disabled={simAttended <= 0}
+                    onClick={() => setSimAttended(Math.max(0, simAttended - 1))}
+                  >
+                    -
+                  </Button>
+                  <span className="w-4 text-center font-bold">{simAttended}</span>
+                  <Button 
+                    variant="secondary" 
+                    className="h-8 w-8 p-0 rounded-full"
+                    onClick={() => setSimAttended(simAttended + 1)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Future Missed</span>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="secondary" 
+                    className="h-8 w-8 p-0 rounded-full"
+                    disabled={simMissed <= 0}
+                    onClick={() => setSimMissed(Math.max(0, simMissed - 1))}
+                  >
+                    -
+                  </Button>
+                  <span className="w-4 text-center font-bold">{simMissed}</span>
+                  <Button 
+                    variant="secondary" 
+                    className="h-8 w-8 p-0 rounded-full"
+                    onClick={() => setSimMissed(simMissed + 1)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 pt-4 border-t border-indigo-500/10 text-center">
+              {simulatedStats.total === 0 ? (
+                <span className="text-sm text-muted-foreground">No classes logged</span>
+              ) : (
+                <>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1">Projected Percentage</p>
+                  <div className={`text-3xl font-bold ${simulatedStats.currentPercentage < (profile?.targetAttendancePercentage || 75) ? 'text-red-500' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                    {simulatedStats.currentPercentage}%
+                  </div>
+                  <div className="mt-2 text-xs font-medium">
+                    {simulatedStats.safeMisses > 0 ? (
+                      <span className="text-emerald-600 dark:text-emerald-400">Safe to miss {simulatedStats.safeMisses} more</span>
+                    ) : simulatedStats.requiredClasses > 0 ? (
+                      <span className="text-red-600 dark:text-red-400">Must attend next {simulatedStats.requiredClasses}</span>
+                    ) : (
+                      <span className="text-muted-foreground">Exactly at threshold</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+        )}
 
         {!Array.isArray(attendanceLogs) ? (
           <div className="p-4 text-center text-sm text-muted-foreground">Loading logs...</div>
