@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, CheckSquare } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
+import { Card } from '@student-os/ui';
 
 export function ToolsScreen() {
   const tools = [
@@ -43,14 +44,16 @@ export function ToolsScreen() {
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
-            <Link className="flex items-center p-4 bg-card border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm active:scale-[0.98] transition-transform" key={tool.id} to={tool.path}>
-              <div className={`p-3 rounded-xl mr-4 ${tool.bg}`}>
-                <Icon className={tool.color} size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">{tool.title}</h3>
-                <p className="text-sm text-muted mt-0.5">{tool.description}</p>
-              </div>
+            <Link key={tool.id} to={tool.path} className="active:scale-[0.98] transition-transform block">
+              <Card className="flex items-center p-4">
+                <div className={`p-3 rounded-xl mr-4 ${tool.bg}`}>
+                  <Icon className={tool.color} size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">{tool.title}</h3>
+                  <p className="text-sm text-muted mt-0.5">{tool.description}</p>
+                </div>
+              </Card>
             </Link>
           );
         })}

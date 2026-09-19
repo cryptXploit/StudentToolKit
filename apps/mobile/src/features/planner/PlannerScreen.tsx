@@ -6,6 +6,7 @@ import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2 } from 'lucide-reac
 import { scheduleEventReminder, cancelEventReminder } from '../../lib/notifications';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Card, Input, Select, Button } from '@student-os/ui';
 
 export function PlannerScreen() {
   const events = useLiveQuery(() => db.events.orderBy('date').toArray()) || [];
@@ -78,32 +79,29 @@ export function PlannerScreen() {
       </header>
 
       {isAdding && (
-        <form onSubmit={handleAdd} className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm mb-6 animate-in fade-in slide-in-from-top-4">
-          <div className="space-y-4">
-            <input 
+        <form onSubmit={handleAdd} className="mb-6 animate-in fade-in slide-in-from-top-4">
+          <Card className="p-4 space-y-4">
+            <Input 
               type="text" required placeholder="Event title (e.g. Database Midterm)"
-              className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
               value={title} onChange={e => setTitle(e.target.value)}
             />
             <div className="grid grid-cols-2 gap-3">
-              <input 
+              <Input 
                 type="date" required
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
                 value={dateStr} onChange={e => setDateStr(e.target.value)}
               />
-              <select 
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary"
+              <Select 
                 value={type} onChange={e => setType(e.target.value as any)}
               >
                 <option value="exam">Exam</option>
                 <option value="assignment">Assignment</option>
-              </select>
+              </Select>
             </div>
             <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 bg-primary text-white font-medium rounded-lg py-2">Add Event</button>
-              <button type="button" onClick={() => setIsAdding(false)} className="px-4 text-muted bg-slate-100 dark:bg-slate-800 rounded-lg">Cancel</button>
+              <Button type="submit" variant="primary" className="flex-1 py-2">Add Event</Button>
+              <Button type="button" variant="secondary" onClick={() => setIsAdding(false)} className="px-4 py-2">Cancel</Button>
             </div>
-          </div>
+          </Card>
         </form>
       )}
 
@@ -121,7 +119,7 @@ export function PlannerScreen() {
             const isPast = daysLeft < 0;
 
             return (
-              <div key={event.id} className="flex items-center bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+              <Card key={event.id} className="p-4 flex items-center">
                 <button onClick={() => toggleStatus(event.id, event.isCompleted)} className="mr-4 text-slate-400 hover:text-primary transition-colors">
                   {event.isCompleted ? <CheckCircle2 className="text-primary"/> : <Circle/>}
                 </button>
@@ -142,7 +140,7 @@ export function PlannerScreen() {
                     <Trash2 size={16} />
                   </button>
                 </div>
-              </div>
+              </Card>
             );
           })
         )}

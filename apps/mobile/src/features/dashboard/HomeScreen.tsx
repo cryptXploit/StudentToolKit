@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link } from 'react-router-dom';
 import { Calculator, CheckSquare, Target, GraduationCap, ChevronRight, AlertCircle } from 'lucide-react';
+import { Card } from '@student-os/ui';
 
 export function HomeScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -39,13 +40,15 @@ export function HomeScreen() {
         </div>
         
         {!profile ? (
-          <Link className="block bg-card border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-5 text-center active:scale-[0.98] transition-transform" to="/profile">
-            <AlertCircle className="mx-auto text-muted mb-2" size={28} />
-            <h3 className="font-medium text-foreground mb-1">Profile Incomplete</h3>
-            <p className="text-sm text-muted">Tap here to set your university and target goals.</p>
+          <Link to="/profile" className="block active:scale-[0.98] transition-transform">
+            <Card className="border-dashed border-slate-300 dark:border-slate-700 p-5 text-center">
+              <AlertCircle className="mx-auto text-muted mb-2" size={28} />
+              <h3 className="font-medium text-foreground mb-1">Profile Incomplete</h3>
+              <p className="text-sm text-muted">Tap here to set your university and target goals.</p>
+            </Card>
           </Link>
         ) : (
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+          <Card className="p-5">
             <div className="flex items-center mb-4 pb-4 border-b border-slate-100 dark:border-slate-800/50">
               <div className="bg-primary/10 p-2.5 rounded-xl mr-3">
                 <GraduationCap className="text-primary" size={24} />
@@ -69,7 +72,7 @@ export function HomeScreen() {
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         )}
       </section>
 
@@ -80,11 +83,13 @@ export function HomeScreen() {
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
-              <Link className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center text-center active:scale-[0.95] transition-transform shadow-sm" key={action.label} to={action.path}>
-                <div className={`p-2 rounded-lg mb-2 ${action.bg}`}>
-                  <Icon className={action.color} size={20} />
-                </div>
-                <span className="text-[11px] font-medium text-foreground leading-tight">{action.label}</span>
+              <Link key={action.label} to={action.path} className="active:scale-[0.95] transition-transform">
+                <Card className="p-3 flex flex-col items-center justify-center text-center h-full">
+                  <div className={`p-2 rounded-lg mb-2 ${action.bg}`}>
+                    <Icon className={action.color} size={20} />
+                  </div>
+                  <span className="text-[11px] font-medium text-foreground leading-tight">{action.label}</span>
+                </Card>
               </Link>
             );
           })}
@@ -94,12 +99,14 @@ export function HomeScreen() {
       {/* Continue Section (Placeholder for Planner) */}
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Up Next</h2>
-        <Link className="flex items-center justify-between bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm active:scale-[0.98] transition-transform" to="/planner">
-          <div>
-            <h3 className="font-medium text-foreground">Academic Timeline</h3>
-            <p className="text-xs text-muted mt-0.5">Track exams and deadlines</p>
-          </div>
-          <ChevronRight className="text-slate-400" size={20} />
+        <Link to="/planner" className="block active:scale-[0.98] transition-transform">
+          <Card className="flex items-center justify-between p-4">
+            <div>
+              <h3 className="font-medium text-foreground">Academic Timeline</h3>
+              <p className="text-xs text-muted mt-0.5">Track exams and deadlines</p>
+            </div>
+            <ChevronRight className="text-slate-400" size={20} />
+          </Card>
         </Link>
       </section>
     </div>
