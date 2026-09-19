@@ -16,6 +16,7 @@ export function ProfileScreen() {
   const [department, setDepartment] = useState('');
   const [maxScale, setMaxScale] = useState('4.00');
   const [targetCGPA, setTargetCGPA] = useState('');
+  const [totalDegreeCredits, setTotalDegreeCredits] = useState('');
   const [currentCGPA, setCurrentCGPA] = useState('');
   const [totalCredits, setTotalCredits] = useState('');
   const [targetAttendance, setTargetAttendance] = useState('75');
@@ -29,6 +30,7 @@ export function ProfileScreen() {
       setDepartment(profile.department || '');
       setMaxScale(profile.maxGradingScale?.toFixed(2) || '4.00');
       if (profile.targetCGPA) setTargetCGPA(profile.targetCGPA.toFixed(2));
+      if (profile.totalDegreeCredits) setTotalDegreeCredits(profile.totalDegreeCredits.toString());
       if (profile.currentCGPA) setCurrentCGPA(profile.currentCGPA.toString());
       if (profile.totalCredits) setTotalCredits(profile.totalCredits.toString());
       if (profile.targetAttendancePercentage) setTargetAttendance(profile.targetAttendancePercentage.toString());
@@ -45,6 +47,7 @@ export function ProfileScreen() {
       department: department.trim(),
       maxGradingScale: parseFloat(maxScale) || 4.0,
       targetCGPA: targetCGPA ? parseFloat(targetCGPA) : undefined,
+      totalDegreeCredits: totalDegreeCredits ? parseFloat(totalDegreeCredits) : undefined,
       currentCGPA: isGpaAutoCalculated ? existingProfile?.currentCGPA : (currentCGPA ? parseFloat(currentCGPA) : undefined),
       totalCredits: isGpaAutoCalculated ? existingProfile?.totalCredits : (totalCredits ? parseFloat(totalCredits) : undefined),
       targetAttendancePercentage: targetAttendance ? parseFloat(targetAttendance) : 75,
@@ -162,6 +165,16 @@ export function ProfileScreen() {
                 placeholder="e.g. 3.50" value={targetCGPA} onChange={(e) => setTargetCGPA(e.target.value)}
               />
             </div>
+          </div>
+          <div className="pt-2">
+            <Label>
+              <GraduationCap className="mr-2 text-primary" size={16} />
+              Total Degree Credits
+            </Label>
+            <Input
+              type="number" step="0.5" min="1" max="300"
+              placeholder="e.g. 130" value={totalDegreeCredits} onChange={(e) => setTotalDegreeCredits(e.target.value)}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

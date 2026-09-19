@@ -123,12 +123,54 @@ export function TranscriptScreen() {
     setItemToDelete(null);
   };
 
+  const renderForecaster = () => {
+    if (!profile || typeof profile.targetCGPA !== 'number' || typeof profile.totalDegreeCredits !== 'number') {
+      return null;
+    }
+
+    const { targetCGPA, totalDegreeCredits, currentCGPA = 0, totalCredits = 0, maxGradingScale = 4.0 } = profile;
+    const creditsRemaining = totalDegreeCredits - totalCredits;
+    
+    if (creditsRemaining <= 0) {
+      return (
+        <Card className="p-4 mb-6 bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800">
+          <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Degree credits completed! You're done.</p>
+        </Card>
+      );
+    }
+    
+    const requiredTotalPoints = targetCGPA * totalDegreeCredits;
+    const currentTotalPoints = currentCGPA * totalCredits;
+    const requiredGpa = (requiredTotalPoints - currentTotalPoints) / creditsRemaining;
+    
+    if (requiredGpa > maxGradingScale) {
+      const maxAchievable = ((currentTotalPoints + (maxGradingScale * creditsRemaining)) / totalDegreeCredits).toFixed(2);
+      return (
+        <Card className="p-4 mb-6 bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-red-800 dark:text-red-400 mb-1">Target Tracker</h3>
+          <p className="text-sm text-red-700 dark:text-red-300">Mathematically impossible. Max achievable is {maxAchievable}.</p>
+        </Card>
+      );
+    }
+    
+    return (
+      <Card className="p-4 mb-6 bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">CGPA Forecaster</h3>
+        <p className="text-sm text-foreground">
+          You need to average a <span className="font-bold text-primary">{requiredGpa.toFixed(2)}</span> GPA over your remaining <span className="font-medium">{creditsRemaining}</span> credits to hit your <span className="font-medium">{targetCGPA.toFixed(2)}</span> target.
+        </p>
+      </Card>
+    );
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">Academic Transcript</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your semesters and grades.</p>
       </header>
+
+      {renderForecaster()}
 
       {saveError && <div className="text-red-500 text-sm mb-2">{saveError}</div>}
       <div className="flex gap-2 mb-6">
