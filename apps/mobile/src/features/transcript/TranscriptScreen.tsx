@@ -7,8 +7,13 @@ import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
 import { Link } from 'react-router-dom';
 
+function generateSafeId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
 export function TranscriptScreen() {
   const [newSemesterName, setNewSemesterName] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const semesters = useLiveQuery(async () => {
     try {
@@ -22,12 +27,16 @@ export function TranscriptScreen() {
 
   const handleAddSemester = async (e?: React.FormEvent) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!newSemesterName.trim()) return;
+    setSaveError(null);
+
+    if (!newSemesterName.trim()) {
+      setSaveError("Semester name cannot be empty.");
+      return;
+    }
     
     try {
-      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
       await db.semesters.put({
-        id: safeId,
+        id: generateSafeId(),
         name: newSemesterName.trim(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -36,7 +45,7 @@ export function TranscriptScreen() {
       hapticImpact('light');
     } catch (error: any) {
       console.error("Failed to save semester:", error);
-      alert("Database Error: " + error.message);
+      setSaveError(error.message || "Unknown database error occurred.");
     }
   };
 
@@ -56,6 +65,7 @@ export function TranscriptScreen() {
         <p className="text-muted-foreground text-sm mt-1">Manage your semesters and grades.</p>
       </header>
 
+      {saveError && <div className="text-red-500 text-sm mb-2">{saveError}</div>}
       <form onSubmit={handleAddSemester} className="flex gap-2 mb-6">
         <Input 
           placeholder="Semester Name (e.g., Fall 2026)" 
