@@ -1,11 +1,20 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare } from 'lucide-react';
+import { Target, CheckSquare, Calculator } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
 export function ToolsScreen() {
   const tools = [
+    {
+      id: 'semester-gpa',
+      title: 'Semester GPA',
+      description: 'Quickly calculate your GPA for a single semester.',
+      icon: Calculator,
+      path: '/tools/semester-gpa',
+      color: 'text-indigo-500',
+      bg: 'bg-indigo-50 dark:bg-indigo-950/30'
+    },
     {
       id: 'target-gpa',
       title: 'Target CGPA Simulator',
@@ -20,7 +29,7 @@ export function ToolsScreen() {
       title: 'Attendance Engine',
       description: 'Can you safely miss the next class?',
       icon: CheckSquare,
-      path: '/tools/attendance', // Placeholder for next phase
+      path: '/tools/attendance',
       color: 'text-emerald-500',
       bg: 'bg-emerald-50 dark:bg-emerald-950/30'
     }
