@@ -26,11 +26,12 @@ export function DocumentVaultScreen() {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!title.trim() || !previewImage) return;
 
     try {
-      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
       await db.documents.put({
         id: safeId,
         title: title.trim(),
@@ -41,8 +42,9 @@ export function DocumentVaultScreen() {
       setTitle('');
       setPreviewImage(null);
       hapticImpact('light');
-    } catch (e: any) {
-      alert("Failed to save document: " + e.message);
+    } catch (error: any) {
+      console.error("Failed to save document:", error);
+      alert("Database Error: " + error.message);
     }
   };
 

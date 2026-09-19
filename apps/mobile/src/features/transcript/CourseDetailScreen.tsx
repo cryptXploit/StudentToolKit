@@ -58,9 +58,7 @@ export function CourseDetailScreen() {
     if (!courseId) return;
     
     try {
-      // Natively get local YYYY-MM-DD
       const today = new Date().toLocaleDateString('en-CA');
-      
       const existingLog = await db.attendance.where('[courseId+date]').equals([courseId, today]).first();
       
       if (existingLog) {
@@ -69,7 +67,7 @@ export function CourseDetailScreen() {
           updatedAt: new Date().toISOString() 
         });
       } else {
-        const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+        const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
         await db.attendance.put({
           id: safeId,
           courseId,
@@ -81,12 +79,12 @@ export function CourseDetailScreen() {
       }
       
       hapticImpact('light');
-    } catch (e: any) {
-      alert("Failed to log attendance: " + e.message);
+    } catch (error: any) {
+      console.error("Failed to log attendance:", error);
+      alert("Database Error: " + error.message);
     }
   };
 
-  // Sort slots by day then by startTime
   const sortedSlots = routineSlots ? [...routineSlots].sort((a, b) => {
     if (a.dayOfWeek !== b.dayOfWeek) {
       return a.dayOfWeek - b.dayOfWeek;
@@ -94,11 +92,12 @@ export function CourseDetailScreen() {
     return a.startTime.localeCompare(b.startTime);
   }) : undefined;
 
-  const handleAddRoutine = async () => {
+  const handleAddRoutine = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!courseId || !startTime || !endTime) return;
 
     try {
-      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
       await db.routine.put({
         id: safeId,
         courseId,
@@ -112,8 +111,9 @@ export function CourseDetailScreen() {
 
       setRoomNumber('');
       hapticImpact('light');
-    } catch (e: any) {
-      alert("Failed to add routine: " + e.message);
+    } catch (error: any) {
+      console.error("Failed to add routine:", error);
+      alert("Database Error: " + error.message);
     }
   };
 
@@ -162,7 +162,7 @@ export function CourseDetailScreen() {
         </div>
       </header>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleAddRoutine(); }}>
+      <form onSubmit={handleAddRoutine}>
         <Card className="p-4 mb-6 space-y-4">
           <div>
             <Label className="text-xs mb-1 text-muted-foreground">Day of Week</Label>
@@ -208,6 +208,7 @@ export function CourseDetailScreen() {
           <Button 
             type="submit"
             variant="primary" 
+            onClick={handleAddRoutine}
             disabled={!startTime || !endTime}
             className="w-full py-3"
           >

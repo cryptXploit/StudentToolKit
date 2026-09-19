@@ -36,7 +36,8 @@ export function SemesterDetailScreen() {
     }
   }, [semesterId]);
 
-  const handleAddCourse = async () => {
+  const handleAddCourse = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!semesterId) return;
 
     const parsedCredit = parseFloat(courseCredit);
@@ -45,7 +46,7 @@ export function SemesterDetailScreen() {
     if (isNaN(parsedCredit) || parsedCredit <= 0) return;
 
     try {
-      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
       await db.courses.put({
         id: safeId,
         semesterId,
@@ -61,8 +62,9 @@ export function SemesterDetailScreen() {
       setCourseGrade('');
       await syncTranscriptToProfile();
       hapticImpact('light');
-    } catch (e: any) {
-      alert("Failed to add course: " + e.message);
+    } catch (error: any) {
+      console.error("Failed to add course:", error);
+      alert("Database Error: " + error.message);
     }
   };
 
@@ -129,7 +131,7 @@ export function SemesterDetailScreen() {
         </div>
       </Alert>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleAddCourse(); }}>
+      <form onSubmit={handleAddCourse}>
         <Card className="p-4 mb-6 space-y-3">
           <Input 
             placeholder="Course Name (e.g., Intro to CS)" 
@@ -158,6 +160,7 @@ export function SemesterDetailScreen() {
             <Button 
               type="submit"
               variant="primary" 
+              onClick={handleAddCourse}
               disabled={!courseCredit || isNaN(parseFloat(courseCredit)) || parseFloat(courseCredit) <= 0}
               className="px-4 shrink-0"
             >

@@ -20,20 +20,23 @@ export function TranscriptScreen() {
     }
   }, []);
 
-  const handleAddSemester = async () => {
+  const handleAddSemester = async (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!newSemesterName.trim()) return;
+    
     try {
-      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
       await db.semesters.put({
         id: safeId,
         name: newSemesterName.trim(),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
       setNewSemesterName('');
       hapticImpact('light');
-    } catch (e: any) {
-      alert("Failed to add semester: " + e.message);
+    } catch (error: any) {
+      console.error("Failed to save semester:", error);
+      alert("Database Error: " + error.message);
     }
   };
 
@@ -53,7 +56,7 @@ export function TranscriptScreen() {
         <p className="text-muted-foreground text-sm mt-1">Manage your semesters and grades.</p>
       </header>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleAddSemester(); }} className="flex gap-2 mb-6">
+      <form onSubmit={handleAddSemester} className="flex gap-2 mb-6">
         <Input 
           placeholder="Semester Name (e.g., Fall 2026)" 
           value={newSemesterName} 
@@ -64,6 +67,7 @@ export function TranscriptScreen() {
           type="submit"
           variant="primary" 
           disabled={!newSemesterName.trim()}
+          onClick={handleAddSemester}
           className="px-4"
         >
           <Plus size={20} />
