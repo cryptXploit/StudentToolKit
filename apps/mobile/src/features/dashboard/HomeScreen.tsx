@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin } from 'lucide-react';
+import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin, CheckCircle, XCircle } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
 import { calculateDaysRemaining } from '@student-os/engine';
+import { hapticImpact } from '../../lib/haptics';
 
 function formatTime(time24: string) {
   if (!time24) return '';
@@ -18,6 +19,7 @@ function formatTime(time24: string) {
 export function HomeScreen() {
   const navigate = useNavigate();
   const profile = useLiveQuery(() => db.profile.get('me'));
+  const today = new Date().toLocaleDateString('en-CA');
   
   const nextEvent = useLiveQuery(() => {
     return db.events.orderBy('date').toArray().then(events => 
@@ -34,16 +36,55 @@ export function HomeScreen() {
     // Sort chronologically by start time (string comparison works for HH:mm)
     slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
     
-    // Join with courses table to get the course name
+    // Join with courses table to get the course name and today's attendance log
     const classesWithCourses = await Promise.all(
       slots.map(async (slot) => {
         const course = await db.courses.get(slot.courseId);
-        return { ...slot, courseName: course?.name || 'Unknown Course' };
+        const log = await db.attendance.where('[courseId+date]').equals([slot.courseId, today]).first();
+        return { 
+          ...slot, 
+          courseName: course?.name || 'Unknown Course',
+          todayLog: log 
+        };
       })
     );
     
     return classesWithCourses;
   });
+
+  const handleQuickLog = async (courseId: string, status: 'present' | 'absent' | 'late') => {
+    try {
+      const existingLog = await db.attendance.where('[courseId+date]').equals([courseId, today]).first();
+      
+      if (existingLog) {
+        await db.attendance.update(existingLog.id, { 
+          status, 
+          updatedAt: new Date().toISOString() 
+        });
+      } else {
+        await db.attendance.put({
+          id: crypto.randomUUID(),
+          courseId,
+          date: today,
+          status,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      hapticImpact('light');
+    } catch (e) {
+      console.error('Failed to log attendance from dashboard', e);
+    }
+  };
+
+  const handleUndoLog = async (logId: string) => {
+    try {
+      await db.attendance.delete(logId);
+      hapticImpact('medium');
+    } catch (e) {
+      console.error('Failed to undo attendance from dashboard', e);
+    }
+  };
 
   const [greeting, setGreeting] = useState('Welcome');
   const [dateString, setDateString] = useState('');
@@ -180,6 +221,50 @@ export function HomeScreen() {
                     </div>
                   )}
                 </div>
+
+                <hr className="my-3 border-slate-100 dark:border-slate-800/50" />
+                
+                {!slot.todayLog ? (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1 py-2 text-xs bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/50"
+                      onClick={() => handleQuickLog(slot.courseId, 'present')}
+                    >
+                      <CheckCircle size={14} className="mr-1.5" /> Present
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1 py-2 text-xs bg-red-50 text-red-600 border-red-100 hover:bg-red-100 dark:bg-red-950/30 dark:border-red-900/50"
+                      onClick={() => handleQuickLog(slot.courseId, 'absent')}
+                    >
+                      <XCircle size={14} className="mr-1.5" /> Absent
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1 py-2 text-xs bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100 dark:bg-orange-950/30 dark:border-orange-900/50"
+                      onClick={() => handleQuickLog(slot.courseId, 'late')}
+                    >
+                      <Clock size={14} className="mr-1.5" /> Late
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg">
+                    <div className="flex items-center text-sm font-medium">
+                      <CheckCircle size={16} className={`mr-2 ${
+                        slot.todayLog!.status === 'present' ? 'text-emerald-500' :
+                        slot.todayLog!.status === 'absent' ? 'text-red-500' : 'text-orange-500'
+                      }`} />
+                      <span className="text-foreground capitalize">{slot.todayLog!.status}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleUndoLog(slot.todayLog!.id)}
+                      className="text-xs text-muted hover:text-foreground font-medium underline underline-offset-2"
+                    >
+                      Undo
+                    </button>
+                  </div>
+                )}
               </Card>
             ))}
           </div>
