@@ -2,12 +2,20 @@ import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, CheckSquare, Target, GraduationCap, ChevronRight } from 'lucide-react';
+import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
+import { calculateDaysRemaining } from '@student-os/engine';
 
 export function HomeScreen() {
   const navigate = useNavigate();
   const profile = useLiveQuery(() => db.profile.get('me'));
+  
+  const nextEvent = useLiveQuery(() => {
+    return db.events.orderBy('date').toArray().then(events => 
+      events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1)
+    );
+  });
+
   const [greeting, setGreeting] = useState('Welcome');
   const [dateString, setDateString] = useState('');
 
@@ -104,18 +112,49 @@ export function HomeScreen() {
         </div>
       </section>
       
-      {/* Continue Section (Placeholder for Planner) */}
+      {/* Up Next Section */}
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Up Next</h2>
-        <Link to="/planner" className="block active:scale-[0.98] transition-transform">
-          <Card className="flex items-center justify-between p-4">
-            <div>
-              <h3 className="font-medium text-foreground">Academic Timeline</h3>
-              <p className="text-xs text-muted mt-0.5">Track exams and deadlines</p>
-            </div>
-            <ChevronRight className="text-slate-400" size={20} />
+        
+        {nextEvent !== undefined ? (
+          nextEvent ? (
+            <Link to="/planner" className="block active:scale-[0.98] transition-transform">
+              <Card className="flex items-center justify-between p-4 border-l-4 border-l-primary">
+                <div>
+                  <h3 className="font-semibold text-foreground leading-tight">{nextEvent.title}</h3>
+                  <p className="text-xs text-muted mt-1 uppercase tracking-wider">{nextEvent.type}</p>
+                </div>
+                <div className="text-right">
+                  {(() => {
+                    const daysLeft = calculateDaysRemaining(nextEvent.date);
+                    const isUrgent = daysLeft >= 0 && daysLeft <= 3;
+                    return (
+                      <div className={`flex items-center justify-end ${isUrgent ? 'text-red-500 font-bold' : 'text-primary font-medium'}`}>
+                        <Clock className="mr-1" size={14} />
+                        <span>
+                          {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </Card>
+            </Link>
+          ) : (
+            <Card className="p-5 text-center flex flex-col items-center justify-center">
+              <Calendar className="text-muted mb-2 opacity-50" size={32} />
+              <h3 className="font-medium text-foreground mb-1">Your schedule is clear</h3>
+              <p className="text-sm text-muted mb-4">Enjoy your free time!</p>
+              <Button variant="secondary" onClick={() => navigate('/planner')} className="px-6 py-2 text-sm">
+                Open Planner
+              </Button>
+            </Card>
+          )
+        ) : (
+          <Card className="p-5 flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
           </Card>
-        </Link>
+        )}
       </section>
     </div>
   );
