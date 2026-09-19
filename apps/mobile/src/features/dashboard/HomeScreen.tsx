@@ -22,34 +22,40 @@ export function HomeScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
   const today = new Date().toLocaleDateString('en-CA');
   
-  const nextEvent = useLiveQuery(() => {
-    return db.events.toArray().then(events => {
-      events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      return events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
-    });
+  const nextEventData = useLiveQuery(async () => {
+    const events = await db.events.toArray();
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const nextEvent = events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
+    
+    if (!nextEvent) return null;
+    
+    const allCourses = await db.courses.toArray();
+    const eventCourse = allCourses.find(c => c.id === nextEvent.courseId);
+    
+    return { event: nextEvent, course: eventCourse };
   });
 
   const todaysClasses = useLiveQuery(async () => {
     const todayDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday...
     
-    // Fetch routine slots for today
+    // Fetch all required data in bulk
     const slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
+    const allCourses = await db.courses.toArray();
+    const todaysLogs = await db.attendance.where({ date: today }).toArray();
     
     // Sort chronologically by start time (string comparison works for HH:mm)
     slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
     
-    // Join with courses table to get the course name and today's attendance log
-    const classesWithCourses = await Promise.all(
-      slots.map(async (slot) => {
-        const course = await db.courses.get(slot.courseId);
-        const log = await db.attendance.where('[courseId+date]').equals([slot.courseId, today]).first();
-        return { 
-          ...slot, 
-          courseName: course?.name || 'Unknown Course',
-          todayLog: log 
-        };
-      })
-    );
+    // Join with courses and attendance logs entirely in-memory (0 micro-transactions per loop)
+    const classesWithCourses = slots.map((slot) => {
+      const course = allCourses.find(c => c.id === slot.courseId);
+      const log = todaysLogs.find(l => l.courseId === slot.courseId);
+      return { 
+        ...slot, 
+        courseName: course?.name || 'Unknown Course',
+        todayLog: log 
+      };
+    });
     
     return classesWithCourses;
   });
@@ -279,17 +285,24 @@ export function HomeScreen() {
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Up Next</h2>
         
-        {nextEvent !== undefined ? (
-          nextEvent ? (
+        {nextEventData !== undefined ? (
+          nextEventData ? (
             <Link to="/planner" className="block active:scale-[0.98] transition-transform">
               <Card className="flex items-center justify-between p-4 border-l-4 border-l-primary">
                 <div>
-                  <h3 className="font-semibold text-foreground leading-tight">{nextEvent.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{nextEvent.type}</p>
+                  <h3 className="font-semibold text-foreground leading-tight">{nextEventData.event.title}</h3>
+                  <div className="flex items-center text-xs text-muted-foreground mt-1 gap-2">
+                    <span className="uppercase tracking-wider font-medium">{nextEventData.event.type}</span>
+                    {nextEventData.course && (
+                      <span className="text-blue-600 dark:text-blue-400 font-bold">
+                        • {nextEventData.course.name}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   {(() => {
-                    const daysLeft = calculateDaysRemaining(nextEvent.date);
+                    const daysLeft = calculateDaysRemaining(nextEventData.event.date);
                     const isUrgent = daysLeft >= 0 && daysLeft <= 3;
                     return (
                       <div className={`flex items-center justify-end ${isUrgent ? 'text-red-500 font-bold' : 'text-primary font-medium'}`}>
