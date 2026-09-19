@@ -8,26 +8,26 @@ export function AttendanceScreen() {
   const [total, setTotal] = useState('');
   const [targetPercentage, setTargetPercentage] = useState('75');
 
-  const result = useMemo(() => {
+  const { result, error } = useMemo(() => {
     const att = parseInt(attended, 10);
     const tot = parseInt(total, 10);
     const target = parseFloat(targetPercentage);
 
-    if (
-      isNaN(att) || isNaN(tot) || isNaN(target) ||
-      att < 0 || tot <= 0 || att > tot || target <= 0 || target > 100
-    ) {
-      return null;
+    // Don't show errors if inputs are empty or clearly non-numeric,
+    // wait for them to finish typing. We only catch domain logic errors.
+    if (isNaN(att) || isNaN(tot) || isNaN(target) || total === '' || attended === '') {
+      return { result: null, error: null };
     }
 
     try {
-      return calculateAttendanceStatus({
+      const res = calculateAttendanceStatus({
         attended: att,
         total: tot,
         targetPercentage: target
       });
+      return { result: res, error: null };
     } catch (e) {
-      return null;
+      return { result: null, error: e instanceof Error ? e.message : 'Invalid input' };
     }
   }, [attended, total, targetPercentage]);
 
@@ -74,40 +74,52 @@ export function AttendanceScreen() {
         </div>
       </div>
 
-      {result && (
-        <div className="mt-auto animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm mb-4">
-            <h3 className="text-sm font-medium text-muted mb-1">Current Attendance</h3>
-            <div className={`text-4xl font-bold ${result.currentPercentage >= parseFloat(targetPercentage) ? 'text-emerald-500' : 'text-red-500'}`}>
-              {result.currentPercentage.toFixed(1)}%
+      <div className="mt-auto">
+        {error ? (
+          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 flex items-start">
+              <AlertTriangle className="mr-3 mt-0.5 shrink-0" size={20} />
+              <div>
+                <h3 className="font-semibold text-sm mb-1">Calculation Error</h3>
+                <p className="text-sm opacity-90 leading-relaxed">{error}</p>
+              </div>
             </div>
           </div>
+        ) : result ? (
+          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm mb-4">
+              <h3 className="text-sm font-medium text-muted mb-1">Current Attendance</h3>
+              <div className={`text-4xl font-bold ${result.currentPercentage >= parseFloat(targetPercentage) ? 'text-emerald-500' : 'text-red-500'}`}>
+                {result.currentPercentage.toFixed(1)}%
+              </div>
+            </div>
 
-          <div className={`p-5 rounded-2xl ${
-            result.safeMisses > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200' : 
-            result.requiredClasses === -1 ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200' : 
-            'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200'
-          }`}>
-            <div className="flex items-center mb-2">
-              {result.safeMisses > 0 && <CheckCircle2 className="mr-2 opacity-80" size={20} />}
-              {result.safeMisses === 0 && result.requiredClasses !== -1 && <AlertTriangle className="mr-2 opacity-80" size={20} />}
-              {result.requiredClasses === -1 && <XCircle className="mr-2 opacity-80" size={20} />}
-              <h2 className="text-sm font-medium opacity-90">
-                {result.safeMisses > 0 ? 'You are in the safe zone' : 
-                 result.requiredClasses === -1 ? 'Mathematically impossible' : 
-                 'Attendance shortage risk'}
-              </h2>
+            <div className={`p-5 rounded-2xl ${
+              result.safeMisses > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200' : 
+              result.requiredClasses === -1 ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200' : 
+              'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200'
+            }`}>
+              <div className="flex items-center mb-2">
+                {result.safeMisses > 0 && <CheckCircle2 className="mr-2 opacity-80" size={20} />}
+                {result.safeMisses === 0 && result.requiredClasses !== -1 && <AlertTriangle className="mr-2 opacity-80" size={20} />}
+                {result.requiredClasses === -1 && <XCircle className="mr-2 opacity-80" size={20} />}
+                <h2 className="text-sm font-medium opacity-90">
+                  {result.safeMisses > 0 ? 'You are in the safe zone' : 
+                   result.requiredClasses === -1 ? 'Mathematically impossible' : 
+                   'Attendance shortage risk'}
+                </h2>
+              </div>
+              
+              <p className="text-sm opacity-90 leading-relaxed font-medium">
+                {result.safeMisses > 0 && `You can safely miss the next ${result.safeMisses} class${result.safeMisses > 1 ? 'es' : ''} and remain above ${targetPercentage}%.`}
+                {result.safeMisses === 0 && result.requiredClasses > 0 && `You must attend the next ${result.requiredClasses} consecutive class${result.requiredClasses > 1 ? 'es' : ''} to reach ${targetPercentage}%.`}
+                {result.safeMisses === 0 && result.requiredClasses === 0 && `You are exactly at your target. Do not miss the next class.`}
+                {result.requiredClasses === -1 && `Even if you attend all remaining classes, you cannot reach ${targetPercentage}%.`}
+              </p>
             </div>
-            
-            <p className="text-sm opacity-90 leading-relaxed font-medium">
-              {result.safeMisses > 0 && `You can safely miss the next ${result.safeMisses} class${result.safeMisses > 1 ? 'es' : ''} and remain above ${targetPercentage}%.`}
-              {result.safeMisses === 0 && result.requiredClasses > 0 && `You must attend the next ${result.requiredClasses} consecutive class${result.requiredClasses > 1 ? 'es' : ''} to reach ${targetPercentage}%.`}
-              {result.safeMisses === 0 && result.requiredClasses === 0 && `You are exactly at your target. Do not miss the next class.`}
-              {result.requiredClasses === -1 && `Even if you attend all remaining classes, you cannot reach ${targetPercentage}%.`}
-            </p>
           </div>
-        </div>
-      )}
+        ) : null}
+      </div>
     </div>
   );
 }

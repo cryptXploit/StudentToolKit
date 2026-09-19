@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateRequiredGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Target, Info } from 'lucide-react';
+import { ArrowLeft, Target, Info, AlertTriangle } from 'lucide-react';
 
 export function TargetGPAScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -22,7 +22,7 @@ export function TargetGPAScreen() {
 
   const maxScale = profile?.maxGradingScale || 4.0;
 
-  const result = useMemo(() => {
+  const { result, error } = useMemo(() => {
     const currGPA = parseFloat(currentCGPA);
     const currCreds = parseFloat(currentCredits);
     const target = parseFloat(targetCGPA);
@@ -30,21 +30,22 @@ export function TargetGPAScreen() {
 
     if (
       isNaN(currGPA) || isNaN(currCreds) || isNaN(target) || isNaN(remCreds) ||
-      remCreds <= 0 || currCreds < 0
+      remCreds === 0 && currentCGPA === ''
     ) {
-      return null;
+      return { result: null, error: null };
     }
 
     try {
-      return calculateRequiredGPA({
+      const res = calculateRequiredGPA({
         currentCGPA: currGPA,
         currentCredits: currCreds,
         targetCGPA: target,
         remainingCredits: remCreds,
         maxScale: maxScale
       });
+      return { result: res, error: null };
     } catch (e) {
-      return null;
+      return { result: null, error: e instanceof Error ? e.message : 'Invalid input' };
     }
   }, [currentCGPA, currentCredits, targetCGPA, remainingCredits, maxScale]);
 
@@ -89,7 +90,7 @@ export function TargetGPAScreen() {
           <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
             <label className="block text-xs font-medium text-muted mb-1">Remaining Credits</label>
             <input
-              type="number" step="0.5" min="0.5"
+              type="number" step="0.5" min="0"
               className="w-full bg-transparent text-lg font-semibold text-foreground focus:outline-none"
               placeholder="e.g. 30" value={remainingCredits} onChange={e => setRemainingCredits(e.target.value)}
             />
@@ -97,29 +98,41 @@ export function TargetGPAScreen() {
         </div>
       </div>
 
-      {result && (
-        <div className="mt-auto animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className={`p-5 rounded-2xl ${result.isPossible ? 'bg-primary text-white' : 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200'}`}>
-            <div className="flex items-center mb-2">
-              {result.isPossible ? <Target className="mr-2 opacity-80" size={20} /> : <Info className="mr-2 opacity-80" size={20} />}
-              <h2 className="text-sm font-medium opacity-90">
-                {result.isPossible ? 'Required Average GPA' : 'Target mathematically impossible'}
-              </h2>
+      <div className="mt-auto">
+        {error ? (
+          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 flex items-start">
+              <AlertTriangle className="mr-3 mt-0.5 shrink-0" size={20} />
+              <div>
+                <h3 className="font-semibold text-sm mb-1">Calculation Error</h3>
+                <p className="text-sm opacity-90 leading-relaxed">{error}</p>
+              </div>
             </div>
-            
-            <div className="text-4xl font-bold mb-3">
-              {result.requiredGPA.toFixed(2)}
-            </div>
-            
-            <p className="text-sm opacity-90 leading-relaxed">
-              {result.isPossible 
-                ? `To reach your target CGPA of ${targetCGPA}, you need to maintain approximately a ${result.requiredGPA.toFixed(2)} average across your remaining ${remainingCredits} credits.`
-                : `Even if you score a perfect ${maxScale.toFixed(2)} in your remaining credits, you cannot mathematically reach ${targetCGPA}.`
-              }
-            </p>
           </div>
-        </div>
-      )}
+        ) : result ? (
+          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className={`p-5 rounded-2xl ${result.isPossible ? 'bg-primary text-white' : 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200'}`}>
+              <div className="flex items-center mb-2">
+                {result.isPossible ? <Target className="mr-2 opacity-80" size={20} /> : <Info className="mr-2 opacity-80" size={20} />}
+                <h2 className="text-sm font-medium opacity-90">
+                  {result.isPossible ? 'Required Average GPA' : 'Target mathematically impossible'}
+                </h2>
+              </div>
+              
+              <div className="text-4xl font-bold mb-3">
+                {result.requiredGPA.toFixed(2)}
+              </div>
+              
+              <p className="text-sm opacity-90 leading-relaxed">
+                {result.isPossible 
+                  ? `To reach your target CGPA of ${targetCGPA}, you need to maintain approximately a ${result.requiredGPA.toFixed(2)} average across your remaining ${remainingCredits} credits.`
+                  : `Even if you score a perfect ${maxScale.toFixed(2)} in your remaining credits, you cannot mathematically reach ${targetCGPA}.`
+                }
+              </p>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
