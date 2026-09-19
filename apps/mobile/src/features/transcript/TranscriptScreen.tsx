@@ -45,7 +45,7 @@ export function TranscriptScreen() {
       });
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("DATABASE HANGING: Dexie is not responding. Click Factory Reset.")), 2000)
+        setTimeout(() => reject(new Error("DATABASE HANGING: Dexie is not responding.")), 2000)
       );
       
       await Promise.race([putPromise, timeoutPromise]);
@@ -64,17 +64,6 @@ export function TranscriptScreen() {
       await db.semesters.delete(id);
     });
     await syncTranscriptToProfile();
-  };
-
-  const handleEmergencyReset = async () => {
-    if (window.confirm("WARNING: This will completely wipe the database to fix corruption. Continue?")) {
-      try {
-        await db.delete(); // Nukes the current DB
-        window.location.reload(); // Force reload to recreate it freshly
-      } catch (err: any) {
-        alert("Reset failed: " + err.message);
-      }
-    }
   };
 
   return (
@@ -131,12 +120,6 @@ export function TranscriptScreen() {
             </Card>
           ))
         )}
-        
-        <div className="text-center mt-8">
-          <button onClick={handleEmergencyReset} className="text-xs text-red-500 underline opacity-70 hover:opacity-100 transition-opacity">
-            Fix Corrupted Database (Factory Reset)
-          </button>
-        </div>
       </div>
     </div>
   );

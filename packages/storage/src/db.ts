@@ -11,53 +11,16 @@ export class StudentDatabase extends Dexie {
   documents!: Table<StudentDocument, string>;
 
   constructor() {
-    super('StudentUtilityOSDB');
+    super('PrepiaDB_Clean');
     
-    // V1 Schema
     this.version(1).stores({
-      profile: 'id',
-      semesters: 'id, isCurrent',
-      courses: 'id, semesterId, code',
-      attendance: 'id, courseId'
-    });
-
-    // V2 Schema - Safe non-destructive upgrade adding events table
-    this.version(2).stores({
-      profile: 'id',
-      semesters: 'id, isCurrent',
-      courses: 'id, semesterId, code',
-      attendance: 'id, courseId',
-      events: 'id, type, date, isCompleted'
-    });
-
-    // V3 Schema - Transcript Schema
-    this.version(3).stores({
-      profile: 'id',
-      events: 'id, date, isCompleted',
-      semesters: 'id',
-      courses: 'id, semesterId', // Index semesterId for fast relational queries
-      attendance: 'id, courseId' // Must keep attendance here so it is not dropped during V2->V3 migration!
-    });
-
-    // V4 Schema - Routine and Attendance Schema
-    this.version(4).stores({
-      profile: 'id',
-      events: 'id, date, isCompleted',
-      semesters: 'id',
-      courses: 'id, semesterId',
-      routine: 'id, courseId, dayOfWeek', // Index courseId and dayOfWeek for fast daily queries
-      attendance: 'id, courseId, date, [courseId+date]' // Compound index for fast checking if a class was logged today
-    });
-
-    // V5 Schema - Document Vault
-    this.version(5).stores({
       profile: 'id',
       events: 'id, date, isCompleted',
       semesters: 'id',
       courses: 'id, semesterId',
       routine: 'id, courseId, dayOfWeek',
       attendance: 'id, courseId, date, [courseId+date]',
-      documents: 'id, createdAt' // Sortable by date added
+      documents: 'id, createdAt'
     });
 
     this.profile = this.table('profile');
