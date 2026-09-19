@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { calculateAttendancePercentage, calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
+import { calculateAttendancePercentage, calculateDaysRemaining, calculateAttendanceStatus, calculateSemesterGPA, calculateCumulativeCGPA } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle, Folder, ChevronRight } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
@@ -23,6 +23,9 @@ export function CourseDetailScreen() {
   const [simAttended, setSimAttended] = useState(0);
   const [simMissed, setSimMissed] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
+  
+  const [isSimulatingRetake, setIsSimulatingRetake] = useState(false);
+  const [simulatedGrade, setSimulatedGrade] = useState<string>('');
 
   const profile = useLiveQuery(() => db.profile.get('me'));
 
@@ -81,6 +84,43 @@ export function CourseDetailScreen() {
       return [];
     }
   }, [courseId]);
+
+  const allCourses = useLiveQuery(async () => {
+    if (!db || typeof course?.grade !== 'number') return [];
+    return await db.courses.toArray();
+  }, [course?.grade]);
+
+  const allSemesters = useLiveQuery(async () => {
+    if (!db || typeof course?.grade !== 'number') return [];
+    return await db.semesters.toArray();
+  }, [course?.grade]);
+
+  const projectedCGPA = useMemo(() => {
+    if (!isSimulatingRetake || !allCourses || !allSemesters || !course || !profile) return null;
+    const parsedGrade = parseFloat(simulatedGrade);
+    if (isNaN(parsedGrade) || parsedGrade < 0 || parsedGrade > (profile.maxGradingScale || 4.0)) return null;
+
+    const mockedCourses = allCourses.map(c => c.id === course.id ? { ...c, grade: parsedGrade } : c);
+
+    const semesterRecords = allSemesters.map(semester => {
+      const semesterCourses = mockedCourses.filter(c => c.semesterId === semester.id);
+      const validCourses = semesterCourses.filter(c => typeof c.grade === 'number' && c.grade >= 0 && c.credit > 0);
+      const courseRecords = validCourses.map(c => ({
+        credits: c.credit,
+        gradePoint: c.grade as number
+      }));
+
+      let gpa = 0;
+      let totalCredits = 0;
+      if (courseRecords.length > 0) {
+        gpa = calculateSemesterGPA(courseRecords);
+        totalCredits = validCourses.reduce((sum, c) => sum + c.credit, 0);
+      }
+      return { credit: totalCredits, gpa };
+    }).filter(record => record.credit > 0);
+
+    return calculateCumulativeCGPA(semesterRecords);
+  }, [isSimulatingRetake, allCourses, allSemesters, course, simulatedGrade, profile]);
 
   const predictiveStats = useMemo(() => {
     if (!attendanceLogs || attendanceLogs.length === 0) return null;
@@ -283,6 +323,53 @@ export function CourseDetailScreen() {
           <p className="text-muted-foreground text-sm mt-0.5">Timetable Builder</p>
         </div>
       </header>
+
+      {typeof course.grade === 'number' && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-medium text-foreground">Retake Simulator</h3>
+              <p className="text-xs text-muted-foreground">Project CGPA impact</p>
+            </div>
+            <button 
+              onClick={() => setIsSimulatingRetake(!isSimulatingRetake)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors bg-primary/10 px-3 py-1.5 rounded-full"
+            >
+              {isSimulatingRetake ? 'Close' : 'Simulate'}
+            </button>
+          </div>
+          
+          {isSimulatingRetake && (
+            <Card className="p-4 space-y-4 border-2 border-primary/20 bg-primary/5">
+              <div>
+                <Label>Simulated Target Grade</Label>
+                <Input 
+                  type="number" step="0.1" min="0" max={profile?.maxGradingScale || 4.0}
+                  placeholder={`e.g. ${profile?.maxGradingScale || 4.0}`}
+                  value={simulatedGrade}
+                  onChange={e => setSimulatedGrade(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              {projectedCGPA !== null && profile?.currentCGPA !== undefined && (
+                <div className="flex items-center justify-between pt-3 border-t border-primary/10">
+                  <div className="text-center flex-1 border-r border-primary/10">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Current</p>
+                    <p className="text-xl font-bold text-foreground">{profile.currentCGPA.toFixed(2)}</p>
+                  </div>
+                  <div className="text-center flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Projected</p>
+                    <p className={`text-xl font-bold ${projectedCGPA > profile.currentCGPA ? 'text-emerald-500' : projectedCGPA < profile.currentCGPA ? 'text-red-500' : 'text-foreground'}`}>
+                      {projectedCGPA.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
+      )}
 
       {(() => {
         if (!nearestExam) return null;
