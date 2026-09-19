@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { calculateSemesterGPA } from '@student-os/engine';
+import { calculateSemesterGPA, calculateAttendancePercentage } from '@student-os/engine';
 import { Alert, Card, Input, Button } from '@student-os/ui';
-import { ArrowLeft, Trash2, Plus, AlertCircle, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, AlertCircle, ChevronRight, Share2 } from 'lucide-react';
+import { Share } from '@capacitor/share';
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
@@ -97,6 +98,43 @@ export function SemesterDetailScreen() {
     }
   }, [courses]);
 
+  const attendanceLogs = useLiveQuery(async () => {
+    try {
+      if (!db || !courses || courses.length === 0) return [];
+      const courseIds = courses.map(c => c.id);
+      
+      const allLogs = await db.attendance.toArray();
+      return allLogs.filter(log => courseIds.includes(log.courseId));
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return [];
+    }
+  }, [courses]);
+
+  const averageAttendance = useMemo(() => {
+    if (!attendanceLogs || attendanceLogs.length === 0) return null;
+    return calculateAttendancePercentage(attendanceLogs);
+  }, [attendanceLogs]);
+
+  const handleShareSnapshot = async () => {
+    if (!semester) return;
+    
+    hapticImpact('light');
+    
+    const attString = averageAttendance !== null ? `${averageAttendance}%` : 'N/A';
+    const snapshotText = `?? Semester Snapshot: ${semester.name}\n? GPA: ${semesterStats.gpa.toFixed(2)}\n?? Credits: ${semesterStats.totalCredits}\n? Attendance: ${attString}\n\nTracked with Student OS`;
+    
+    try {
+      await Share.share({
+        title: 'My Semester',
+        text: snapshotText,
+        dialogTitle: 'Share Semester Snapshot',
+      });
+    } catch (error) {
+      console.error('Error sharing snapshot:', error);
+    }
+  };
+
   if (semester === undefined) {
     return (
       <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex items-center justify-center">
@@ -117,15 +155,20 @@ export function SemesterDetailScreen() {
 
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
-      <header className="mb-6 mt-2 flex items-center">
-        <Button variant="ghost" className="mr-2 p-2 -ml-2" onClick={() => navigate(-1)}>
-          <ArrowLeft size={24} />
+      <header className="mb-6 mt-2 flex items-center justify-between">
+        <div className="flex items-center flex-1 min-w-0">
+          <Button variant="ghost" className="mr-2 p-2 -ml-2 shrink-0" onClick={() => navigate(-1)}>
+            <ArrowLeft size={24} />
+          </Button>
+          <h1 className="text-2xl font-bold text-foreground truncate pr-2">{semester.name}</h1>
+        </div>
+        <Button variant="ghost" className="p-2 -mr-2 text-primary" onClick={handleShareSnapshot}>
+          <Share2 size={22} />
         </Button>
-        <h1 className="text-2xl font-bold text-foreground">{semester.name}</h1>
       </header>
 
       <Alert variant="info" className="mb-6">
-        <div className="flex justify-between items-center w-full">
+        <div className="flex justify-between items-center w-full mb-3">
           <div>
             <p className="text-sm font-medium opacity-80">Semester GPA</p>
             <p className="text-3xl font-bold">{semesterStats.gpa.toFixed(2)}</p>
@@ -134,6 +177,12 @@ export function SemesterDetailScreen() {
             <p className="text-sm font-medium opacity-80">Graded Credits</p>
             <p className="text-xl font-semibold">{semesterStats.totalCredits}</p>
           </div>
+        </div>
+        <div className="border-t border-primary/20 pt-3 flex justify-between items-center">
+          <span className="text-sm font-medium opacity-80">Average Attendance</span>
+          <span className="text-sm font-bold bg-primary/20 px-2 py-0.5 rounded">
+            {averageAttendance !== null ? `${averageAttendance}%` : 'N/A'}
+          </span>
         </div>
       </Alert>
 
@@ -193,7 +242,7 @@ export function SemesterDetailScreen() {
                   <h3 className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {course.credit} Credits
-                    {typeof course.grade === 'number' && ` â€¢ Grade: ${course.grade}`}
+                    {typeof course.grade === 'number' && ` • Grade: ${course.grade}`}
                   </p>
                 </div>
                 <ChevronRight size={20} className="text-muted-foreground opacity-50" />
