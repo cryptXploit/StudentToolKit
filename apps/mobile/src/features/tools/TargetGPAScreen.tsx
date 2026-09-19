@@ -3,8 +3,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateRequiredGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Target, Info, AlertTriangle } from 'lucide-react';
-import { Card, Input, Label, Alert } from '@student-os/ui';
+import { ArrowLeft, Target, Info, AlertTriangle, Share2 } from 'lucide-react';
+import { Card, Input, Label, Alert, Button } from '@student-os/ui';
+import { shareContent } from '../../lib/share';
 
 export function TargetGPAScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -118,12 +119,25 @@ export function TargetGPAScreen() {
                 {result.requiredGPA.toFixed(2)}
               </div>
               
-              <p className="text-sm opacity-90 leading-relaxed">
+              <p className="text-sm opacity-90 leading-relaxed mb-4">
                 {result.isPossible 
                   ? `To reach your target CGPA of ${targetCGPA}, you need to maintain approximately a ${result.requiredGPA.toFixed(2)} average across your remaining ${remainingCredits} credits.`
                   : `Even if you score a perfect ${maxScale.toFixed(2)} in your remaining credits, you cannot mathematically reach ${targetCGPA}.`
                 }
               </p>
+              
+              {result.isPossible && (
+                <Button 
+                  variant="secondary" 
+                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  onClick={() => shareContent(
+                    'Target GPA Result', 
+                    `🎯 I need to maintain a ${result.requiredGPA.toFixed(2)} GPA over my remaining ${remainingCredits} credits to hit my target of ${targetCGPA}! Calculated instantly on Student OS.`
+                  )}
+                >
+                  <Share2 className="mr-2" size={16} /> Share Result
+                </Button>
+              )}
             </div>
           </div>
         ) : null}

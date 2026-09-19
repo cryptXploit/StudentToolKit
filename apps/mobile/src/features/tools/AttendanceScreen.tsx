@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { calculateAttendanceStatus } from '@student-os/engine';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
-import { Card, Input, Label, Alert } from '@student-os/ui';
+import { ArrowLeft, CheckCircle2, AlertTriangle, XCircle, Share2 } from 'lucide-react';
+import { Card, Input, Label, Alert, Button } from '@student-os/ui';
+import { shareContent } from '../../lib/share';
 
 export function AttendanceScreen() {
   const [attended, setAttended] = useState('');
@@ -104,6 +105,26 @@ export function AttendanceScreen() {
                 (result.requiredClasses === -1 && `Even if you attend all remaining classes, you cannot reach ${targetPercentage}%.`) || ''
               }
             />
+            
+            {result.requiredClasses !== -1 && (
+              <Button 
+                variant="secondary" 
+                className="w-full mt-4 bg-transparent border-slate-200 dark:border-slate-800"
+                onClick={() => {
+                  let text = '';
+                  if (result.safeMisses > 0) {
+                    text = `🛑 I can safely miss ${result.safeMisses} more class${result.safeMisses > 1 ? 'es' : ''} and still keep my attendance on track! Calculated instantly on Student OS.`;
+                  } else if (result.requiredClasses > 0) {
+                    text = `⚠️ I need to attend the next ${result.requiredClasses} class${result.requiredClasses > 1 ? 'es' : ''} to recover my attendance! Calculated instantly on Student OS.`;
+                  } else {
+                    text = `🎯 My attendance is exactly on track, no room for errors! Calculated instantly on Student OS.`;
+                  }
+                  shareContent('Attendance Result', text);
+                }}
+              >
+                <Share2 className="mr-2" size={16} /> Share Result
+              </Button>
+            )}
           </div>
         ) : null}
       </div>
