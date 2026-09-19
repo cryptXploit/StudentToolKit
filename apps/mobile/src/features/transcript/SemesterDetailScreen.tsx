@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateSemesterGPA } from '@student-os/engine';
-import { Card, Input, Button, Alert } from '@student-os/ui';
+import { Alert, Card, Input, Button } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, AlertCircle, ChevronRight } from 'lucide-react';
+import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
 import { deleteCourseCascade } from '../../lib/cascade';
@@ -69,10 +70,14 @@ export function SemesterDetailScreen() {
     }
   };
 
-  const handleDeleteCourse = async (id: string) => {
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
+
+  const confirmDeleteCourse = async () => {
+    if (!itemToDelete) return;
     hapticImpact('medium');
-    await deleteCourseCascade(id);
+    await deleteCourseCascade(itemToDelete.id);
     await syncTranscriptToProfile();
+    setItemToDelete(null);
   };
 
   const semesterStats = useMemo(() => {
@@ -198,7 +203,7 @@ export function SemesterDetailScreen() {
                 className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                 onClick={(e) => {
                   e.preventDefault();
-                  handleDeleteCourse(course.id);
+                  setItemToDelete({ id: course.id, name: course.name });
                 }}
               >
                 <Trash2 size={20} />
@@ -207,6 +212,13 @@ export function SemesterDetailScreen() {
           ))
         )}
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={itemToDelete !== null}
+        itemName={itemToDelete?.name || ''}
+        onConfirm={confirmDeleteCourse}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 }

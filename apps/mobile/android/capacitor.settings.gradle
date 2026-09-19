@@ -6,13 +6,13 @@ include ':capacitor-community-admob'
 project(':capacitor-community-admob').projectDir = new File('../../../node_modules/.pnpm/@capacitor-community+admob@6.2.0/node_modules/@capacitor-community/admob/android')
 
 include ':capacitor-community-file-opener'
-project(':capacitor-community-file-opener').projectDir = new File('../../../node_modules/.pnpm/@capacitor-community+file-opener@8.0.1_@capacitor+core@6.2.2/node_modules/@capacitor-community/file-opener/android')
+project(':capacitor-community-file-opener').projectDir = new File('../../../node_modules/.pnpm/@capacitor-community+file-opener@6.0.1_@capacitor+core@6.2.2/node_modules/@capacitor-community/file-opener/android')
 
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../../../node_modules/.pnpm/@capacitor+app@6.0.3_@capacitor+core@6.2.2/node_modules/@capacitor/app/android')
 
 include ':capacitor-filesystem'
-project(':capacitor-filesystem').projectDir = new File('../../../node_modules/.pnpm/@capacitor+filesystem@8.1.3_@capacitor+core@6.2.2/node_modules/@capacitor/filesystem/android')
+project(':capacitor-filesystem').projectDir = new File('../../../node_modules/.pnpm/@capacitor+filesystem@6.0.4_@capacitor+core@6.2.2/node_modules/@capacitor/filesystem/android')
 
 include ':capacitor-haptics'
 project(':capacitor-haptics').projectDir = new File('../../../node_modules/.pnpm/@capacitor+haptics@6.0.3_@capacitor+core@6.2.2/node_modules/@capacitor/haptics/android')

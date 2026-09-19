@@ -8,6 +8,7 @@ import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
 import { deleteSemesterCascade } from '../../lib/cascade';
 import { Link } from 'react-router-dom';
+import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 
 function generateSafeId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -94,14 +95,18 @@ export function TranscriptScreen() {
     }
   };
 
-  const handleDeleteSemester = async (id: string) => {
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
+
+  const confirmDeleteSemester = async () => {
+    if (!itemToDelete) return;
+    
     hapticImpact('medium');
-    await deleteSemesterCascade(id);
+    await deleteSemesterCascade(itemToDelete.id);
     await syncTranscriptToProfile();
     await fetchSemesters();
     
     // Auto-clear active semester if it was deleted
-    if (profile?.activeSemesterId === id) {
+    if (profile?.activeSemesterId === itemToDelete.id) {
       try {
         const existingProfile = await db.profile.get('me');
         if (existingProfile) {
@@ -115,6 +120,7 @@ export function TranscriptScreen() {
         console.error(err);
       }
     }
+    setItemToDelete(null);
   };
 
   return (
@@ -171,8 +177,12 @@ export function TranscriptScreen() {
                 )}
                 <Button 
                   variant="ghost" 
-                  className="p-2 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
-                  onClick={() => handleDeleteSemester(semester.id)}
+                  className="p-3 text-muted-foreground hover:text-red-500 rounded-xl"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setItemToDelete({ id: semester.id, name: semester.name });
+                  }}
                 >
                   <Trash2 size={20} />
                 </Button>
@@ -181,6 +191,13 @@ export function TranscriptScreen() {
           )})
         )}
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={itemToDelete !== null}
+        itemName={itemToDelete?.name || ''}
+        onConfirm={confirmDeleteSemester}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 }

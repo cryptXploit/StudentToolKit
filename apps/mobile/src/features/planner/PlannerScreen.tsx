@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
 import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2, BookOpen } from 'lucide-react';
+import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 import { scheduleEventReminder, cancelEventReminder } from '../../lib/notifications';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
@@ -64,11 +65,15 @@ export function PlannerScreen() {
     await db.events.update(id, { isCompleted: !currentStatus });
   };
 
-  const handleDelete = async (id: string) => {
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
+
+  const confirmDeleteEvent = async () => {
+    if (!itemToDelete) return;
     hapticImpact('light');
     
-    await cancelEventReminder(id);
-    await db.events.delete(id);
+    await cancelEventReminder(itemToDelete.id);
+    await db.events.delete(itemToDelete.id);
+    setItemToDelete(null);
   };
 
   return (
@@ -169,7 +174,7 @@ export function PlannerScreen() {
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(event.id)} className="mt-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete Event">
+                  <button onClick={() => setItemToDelete({ id: event.id, name: event.title })} className="mt-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete Event">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -178,6 +183,13 @@ export function PlannerScreen() {
           })
         )}
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={itemToDelete !== null}
+        itemName={itemToDelete?.name || ''}
+        onConfirm={confirmDeleteEvent}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 }

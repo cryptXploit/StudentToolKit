@@ -6,6 +6,7 @@ import { Card, Input, Button, Alert } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { saveBase64ToDisk, deleteFileFromDisk } from '../../lib/filesystem';
+import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 
 function generateSafeId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -175,13 +176,17 @@ export function DocumentVaultScreen() {
     }
   };
 
-  const handleDelete = async (doc: any) => {
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string, fileUri?: string } | null>(null);
+
+  const confirmDeleteDoc = async () => {
+    if (!itemToDelete) return;
     hapticImpact('medium');
-    if (doc.fileUri) {
-      await deleteFileFromDisk(doc.fileUri);
+    if (itemToDelete.fileUri) {
+      await deleteFileFromDisk(itemToDelete.fileUri);
     }
-    await db.documents.delete(doc.id);
+    await db.documents.delete(itemToDelete.id);
     if (selectedCourse) await fetchDocuments(selectedCourse);
+    setItemToDelete(null);
   };
 
   const handleOpenDocument = async (doc: any) => {
@@ -387,7 +392,7 @@ export function DocumentVaultScreen() {
                       <Button 
                         variant="ghost" 
                         className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
-                        onClick={() => handleDelete(doc)}
+                        onClick={() => setItemToDelete({ id: doc.id, name: doc.title, fileUri: doc.fileUri })}
                       >
                         <Trash2 size={18} />
                       </Button>
@@ -399,6 +404,13 @@ export function DocumentVaultScreen() {
           </div>
         </>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={itemToDelete !== null}
+        itemName={itemToDelete?.name || ''}
+        onConfirm={confirmDeleteDoc}
+        onCancel={() => setItemToDelete(null)}
+      />
     </div>
   );
 }
