@@ -4,6 +4,7 @@ import { db } from '@student-os/storage';
 import { calculateRequiredGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Target, Info, AlertTriangle } from 'lucide-react';
+import { Card, Input, Label, Alert } from '@student-os/ui';
 
 export function TargetGPAScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -63,51 +64,45 @@ export function TargetGPAScreen() {
 
       <div className="space-y-4 mb-6">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
-            <label className="block text-xs font-medium text-muted mb-1">Current CGPA</label>
-            <input
+          <Card className="p-3">
+            <Label className="text-xs mb-1 text-muted">Current CGPA</Label>
+            <Input
               type="number" step="0.01" min="0" max={maxScale}
-              className="w-full bg-transparent text-lg font-semibold text-foreground focus:outline-none"
+              className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
               placeholder="e.g. 3.20" value={currentCGPA} onChange={e => setCurrentCGPA(e.target.value)}
             />
-          </div>
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
-            <label className="block text-xs font-medium text-muted mb-1">Completed Credits</label>
-            <input
+          </Card>
+          <Card className="p-3">
+            <Label className="text-xs mb-1 text-muted">Completed Credits</Label>
+            <Input
               type="number" step="0.5" min="0"
-              className="w-full bg-transparent text-lg font-semibold text-foreground focus:outline-none"
+              className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
               placeholder="e.g. 90" value={currentCredits} onChange={e => setCurrentCredits(e.target.value)}
             />
-          </div>
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm border-l-4 border-l-primary">
-            <label className="block text-xs font-medium text-muted mb-1">Target CGPA</label>
-            <input
+          </Card>
+          <Card className="p-3 border-l-4 border-l-primary">
+            <Label className="text-xs mb-1 text-muted">Target CGPA</Label>
+            <Input
               type="number" step="0.01" min="0" max={maxScale}
-              className="w-full bg-transparent text-lg font-semibold text-foreground focus:outline-none"
+              className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
               placeholder="e.g. 3.50" value={targetCGPA} onChange={e => setTargetCGPA(e.target.value)}
             />
-          </div>
-          <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
-            <label className="block text-xs font-medium text-muted mb-1">Remaining Credits</label>
-            <input
+          </Card>
+          <Card className="p-3">
+            <Label className="text-xs mb-1 text-muted">Remaining Credits</Label>
+            <Input
               type="number" step="0.5" min="0"
-              className="w-full bg-transparent text-lg font-semibold text-foreground focus:outline-none"
+              className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
               placeholder="e.g. 30" value={remainingCredits} onChange={e => setRemainingCredits(e.target.value)}
             />
-          </div>
+          </Card>
         </div>
       </div>
 
       <div className="mt-auto">
         {error ? (
           <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 flex items-start">
-              <AlertTriangle className="mr-3 mt-0.5 shrink-0" size={20} />
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Calculation Error</h3>
-                <p className="text-sm opacity-90 leading-relaxed">{error}</p>
-              </div>
-            </div>
+            <Alert variant="error" title="Calculation Error" message={error} icon={AlertTriangle} />
           </div>
         ) : result ? (
           <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">

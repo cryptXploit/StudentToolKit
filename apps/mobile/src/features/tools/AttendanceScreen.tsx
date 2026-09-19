@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { calculateAttendanceStatus } from '@student-os/engine';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Card, Input, Label, Alert } from '@student-os/ui';
 
 export function AttendanceScreen() {
   const [attended, setAttended] = useState('');
@@ -44,79 +45,65 @@ export function AttendanceScreen() {
       </header>
 
       <div className="space-y-4 mb-6">
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-4">
+        <Card className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Attended Classes</label>
-              <input
+              <Label className="text-xs mb-1 text-muted">Attended Classes</Label>
+              <Input
                 type="number" min="0" step="1"
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-lg font-semibold text-foreground focus:outline-none focus:border-primary"
+                className="text-lg font-semibold"
                 placeholder="e.g. 15" value={attended} onChange={e => setAttended(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Total Classes</label>
-              <input
+              <Label className="text-xs mb-1 text-muted">Total Classes</Label>
+              <Input
                 type="number" min="1" step="1"
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-lg font-semibold text-foreground focus:outline-none focus:border-primary"
+                className="text-lg font-semibold"
                 placeholder="e.g. 18" value={total} onChange={e => setTotal(e.target.value)}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted mb-1">Target Percentage (%)</label>
-            <input
+            <Label className="text-xs mb-1 text-muted">Target Percentage (%)</Label>
+            <Input
               type="number" min="1" max="100" step="1"
-              className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-lg font-semibold text-foreground focus:outline-none focus:border-primary"
+              className="text-lg font-semibold"
               placeholder="75" value={targetPercentage} onChange={e => setTargetPercentage(e.target.value)}
             />
           </div>
-        </div>
+        </Card>
       </div>
 
       <div className="mt-auto">
         {error ? (
           <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 flex items-start">
-              <AlertTriangle className="mr-3 mt-0.5 shrink-0" size={20} />
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Calculation Error</h3>
-                <p className="text-sm opacity-90 leading-relaxed">{error}</p>
-              </div>
-            </div>
+            <Alert variant="error" title="Calculation Error" message={error} icon={AlertTriangle} />
           </div>
         ) : result ? (
           <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm mb-4">
+            <Card className="p-5 mb-4">
               <h3 className="text-sm font-medium text-muted mb-1">Current Attendance</h3>
               <div className={`text-4xl font-bold ${result.currentPercentage >= parseFloat(targetPercentage) ? 'text-emerald-500' : 'text-red-500'}`}>
                 {result.currentPercentage.toFixed(1)}%
               </div>
-            </div>
+            </Card>
 
-            <div className={`p-5 rounded-2xl ${
-              result.safeMisses > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200' : 
-              result.requiredClasses === -1 ? 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200' : 
-              'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200'
-            }`}>
-              <div className="flex items-center mb-2">
-                {result.safeMisses > 0 && <CheckCircle2 className="mr-2 opacity-80" size={20} />}
-                {result.safeMisses === 0 && result.requiredClasses !== -1 && <AlertTriangle className="mr-2 opacity-80" size={20} />}
-                {result.requiredClasses === -1 && <XCircle className="mr-2 opacity-80" size={20} />}
-                <h2 className="text-sm font-medium opacity-90">
-                  {result.safeMisses > 0 ? 'You are in the safe zone' : 
-                   result.requiredClasses === -1 ? 'Mathematically impossible' : 
-                   'Attendance shortage risk'}
-                </h2>
-              </div>
-              
-              <p className="text-sm opacity-90 leading-relaxed font-medium">
-                {result.safeMisses > 0 && `You can safely miss the next ${result.safeMisses} class${result.safeMisses > 1 ? 'es' : ''} and remain above ${targetPercentage}%.`}
-                {result.safeMisses === 0 && result.requiredClasses > 0 && `You must attend the next ${result.requiredClasses} consecutive class${result.requiredClasses > 1 ? 'es' : ''} to reach ${targetPercentage}%.`}
-                {result.safeMisses === 0 && result.requiredClasses === 0 && `You are exactly at your target. Do not miss the next class.`}
-                {result.requiredClasses === -1 && `Even if you attend all remaining classes, you cannot reach ${targetPercentage}%.`}
-              </p>
-            </div>
+            <Alert 
+              variant={result.safeMisses > 0 ? 'success' : result.requiredClasses === -1 ? 'error' : 'warning'}
+              icon={result.safeMisses > 0 ? CheckCircle2 : result.requiredClasses === -1 ? XCircle : AlertTriangle}
+              title={
+                result.safeMisses > 0 ? 'You are in the safe zone' : 
+                result.requiredClasses === -1 ? 'Mathematically impossible' : 
+                'Attendance shortage risk'
+              }
+              message={
+                (result.safeMisses > 0 && `You can safely miss the next ${result.safeMisses} class${result.safeMisses > 1 ? 'es' : ''} and remain above ${targetPercentage}%.`) ||
+                (result.safeMisses === 0 && result.requiredClasses > 0 && `You must attend the next ${result.requiredClasses} consecutive class${result.requiredClasses > 1 ? 'es' : ''} to reach ${targetPercentage}%.`) ||
+                (result.safeMisses === 0 && result.requiredClasses === 0 && `You are exactly at your target. Do not miss the next class.`) ||
+                (result.requiredClasses === -1 && `Even if you attend all remaining classes, you cannot reach ${targetPercentage}%.`) || ''
+              }
+            />
           </div>
         ) : null}
       </div>
