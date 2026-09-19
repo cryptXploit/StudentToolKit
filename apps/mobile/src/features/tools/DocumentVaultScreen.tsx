@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@student-os/storage';
-import { Trash2, FolderLock, ArrowLeft, ChevronRight, FileText, Image as ImageIcon, BookOpen, FileUp } from 'lucide-react';
+import { Trash2, FolderLock, ArrowLeft, ChevronRight, FileText, Image as ImageIcon, BookOpen, FileUp, Folder } from 'lucide-react';
 import { Card, Input, Button, Alert } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { FileOpener } from '@capacitor-community/file-opener';
@@ -14,10 +14,9 @@ function generateSafeId() {
 export function DocumentVaultScreen() {
   const navigate = useNavigate();
 
-  // Navigation State
-  const [view, setView] = useState<'semesters' | 'courses' | 'documents'>('semesters');
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(null);
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  // Drill-Down State as Requested
+  const [selectedSemester, setSelectedSemester] = useState<any | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
 
   // Data State
   const [semesters, setSemesters] = useState<any[] | undefined>(undefined);
@@ -29,14 +28,15 @@ export function DocumentVaultScreen() {
   const [previewFile, setPreviewFile] = useState<{ data: string, type: string, size: number, isImage: boolean } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Fetching Data (No useLiveQuery!)
+  // Fetching Data (Sorted natively in-memory)
   const fetchSemesters = async () => {
     try {
       if (!db || typeof db.semesters === 'undefined') return;
       const data = await db.semesters.toArray();
       data.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       
-      // Also fetch 'unassigned' legacy docs check
+      // Compute counts for semesters? Not requested, just courses.
+      
       const legacyDocs = await db.documents.where({ courseId: 'unassigned' }).count();
       if (legacyDocs > 0 && !data.find(s => s.id === 'legacy')) {
         data.unshift({ id: 'legacy', name: 'Legacy Documents' } as any);
@@ -49,25 +49,32 @@ export function DocumentVaultScreen() {
     }
   };
 
-  const fetchCourses = async (semId: string) => {
+  const fetchCourses = async (sem: any) => {
     try {
       setCourses(undefined);
-      if (semId === 'legacy') {
-        setCourses([{ id: 'unassigned', name: 'Unassigned Documents' }]);
+      if (sem.id === 'legacy') {
+        const count = await db.documents.where({ courseId: 'unassigned' }).count();
+        setCourses([{ id: 'unassigned', name: 'Unassigned Documents', docCount: count }]);
         return;
       }
-      const data = await db.courses.where({ semesterId: semId }).toArray();
-      setCourses(data);
+      
+      const data = await db.courses.where({ semesterId: sem.id }).toArray();
+      // Get document counts for each course
+      const dataWithCounts = await Promise.all(data.map(async (c) => {
+        const docCount = await db.documents.where({ courseId: c.id }).count();
+        return { ...c, docCount };
+      }));
+      setCourses(dataWithCounts);
     } catch (e) {
       console.error(e);
       setCourses([]);
     }
   };
 
-  const fetchDocuments = async (courseId: string) => {
+  const fetchDocuments = async (course: any) => {
     try {
       setDocuments(undefined);
-      const data = await db.documents.where({ courseId }).toArray();
+      const data = await db.documents.where({ courseId: course.id }).toArray();
       data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setDocuments(data);
     } catch (e) {
@@ -81,26 +88,23 @@ export function DocumentVaultScreen() {
   }, []);
 
   // Handlers
-  const handleSelectSemester = (semId: string) => {
-    setSelectedSemesterId(semId);
-    setView('courses');
-    fetchCourses(semId);
+  const handleSelectSemester = (sem: any) => {
+    setSelectedSemester(sem);
+    fetchCourses(sem);
   };
 
-  const handleSelectCourse = (courseId: string) => {
-    setSelectedCourseId(courseId);
-    setView('documents');
-    fetchDocuments(courseId);
+  const handleSelectCourse = (course: any) => {
+    setSelectedCourse(course);
+    fetchDocuments(course);
   };
 
   const handleBack = () => {
-    if (view === 'documents') {
-      setView('courses');
-      setSelectedCourseId(null);
+    if (selectedCourse) {
+      setSelectedCourse(null);
       setPreviewFile(null);
-    } else if (view === 'courses') {
-      setView('semesters');
-      setSelectedSemesterId(null);
+      if (selectedSemester) fetchCourses(selectedSemester); // Refresh counts when going back
+    } else if (selectedSemester) {
+      setSelectedSemester(null);
     } else {
       navigate(-1);
     }
@@ -134,7 +138,7 @@ export function DocumentVaultScreen() {
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!title.trim() || !previewFile || !selectedCourseId) return;
+    if (!title.trim() || !previewFile || !selectedCourse) return;
 
     try {
       const docId = generateSafeId();
@@ -145,7 +149,8 @@ export function DocumentVaultScreen() {
       
       const putPromise = db.documents.put({
         id: docId,
-        courseId: selectedCourseId,
+        courseId: selectedCourse.id,
+        semesterId: selectedSemester?.id === 'legacy' ? undefined : selectedSemester?.id,
         title: title.trim(),
         fileUri: fileUri,
         mimeType: previewFile.type,
@@ -163,7 +168,7 @@ export function DocumentVaultScreen() {
       setPreviewFile(null);
       hapticImpact('light');
       
-      await fetchDocuments(selectedCourseId);
+      await fetchDocuments(selectedCourse);
     } catch (error: any) {
       console.error("Failed to save document:", error);
       setSaveError(error.message || "Unknown database error occurred.");
@@ -176,7 +181,7 @@ export function DocumentVaultScreen() {
       await deleteFileFromDisk(doc.fileUri);
     }
     await db.documents.delete(doc.id);
-    if (selectedCourseId) await fetchDocuments(selectedCourseId);
+    if (selectedCourse) await fetchDocuments(selectedCourse);
   };
 
   const handleOpenDocument = async (doc: any) => {
@@ -192,16 +197,6 @@ export function DocumentVaultScreen() {
     }
   };
 
-  const getActiveSemesterName = () => {
-    if (!semesters || !selectedSemesterId) return '';
-    return semesters.find(s => s.id === selectedSemesterId)?.name || '';
-  };
-  
-  const getActiveCourseName = () => {
-    if (!courses || !selectedCourseId) return '';
-    return courses.find(c => c.id === selectedCourseId)?.name || '';
-  };
-
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
       <header className="mb-6 mt-2 flex items-center">
@@ -211,14 +206,14 @@ export function DocumentVaultScreen() {
         <div className="truncate flex items-center">
           <FolderLock className="mr-2 text-primary shrink-0" size={20} />
           <h1 className="text-xl font-bold text-foreground truncate">
-            {view === 'semesters' ? 'Document Vault' : 
-             view === 'courses' ? getActiveSemesterName() : 
-             getActiveCourseName()}
+            {!selectedSemester ? 'Document Vault' : 
+             !selectedCourse ? selectedSemester.name : 
+             (selectedCourse.name || 'Unnamed Course')}
           </h1>
         </div>
       </header>
 
-      {view === 'semesters' && (
+      {!selectedSemester && (
         <>
           <Alert 
             variant="info" 
@@ -242,8 +237,11 @@ export function DocumentVaultScreen() {
             ) : (
               semesters.map(semester => (
                 <Card key={semester.id} className="flex items-center justify-between p-1 overflow-hidden group">
-                  <button onClick={() => handleSelectSemester(semester.id)} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg text-left">
-                    <span className="font-semibold text-foreground">{semester.name}</span>
+                  <button onClick={() => handleSelectSemester(semester)} className="flex-1 p-3 flex items-center justify-between active:scale-95 transition-transform rounded-lg text-left">
+                    <div className="flex items-center">
+                      <Folder className="mr-3 text-primary" size={20} />
+                      <span className="font-semibold text-foreground">{semester.name}</span>
+                    </div>
                     <ChevronRight size={20} className="text-muted-foreground opacity-50" />
                   </button>
                 </Card>
@@ -253,7 +251,7 @@ export function DocumentVaultScreen() {
         </>
       )}
 
-      {view === 'courses' && (
+      {selectedSemester && !selectedCourse && (
         <div className="flex-1 overflow-y-auto space-y-3 pb-6">
           <h3 className="text-sm font-medium text-foreground mb-3">Select Course</h3>
           
@@ -269,9 +267,19 @@ export function DocumentVaultScreen() {
           ) : (
             courses.map(course => (
               <Card key={course.id} className="flex items-center justify-between p-1 overflow-hidden group">
-                <button onClick={() => handleSelectCourse(course.id)} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg text-left">
-                  <span className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</span>
-                  <ChevronRight size={20} className="text-muted-foreground opacity-50" />
+                <button onClick={() => handleSelectCourse(course)} className="flex-1 p-3 flex items-center justify-between active:scale-95 transition-transform rounded-lg text-left">
+                  <div className="flex items-center">
+                    <Folder className="mr-3 text-primary" size={20} />
+                    <span className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {course.docCount !== undefined && (
+                      <span className="text-[10px] bg-slate-200 dark:bg-slate-700 text-foreground px-2 py-1 rounded-full font-medium">
+                        {course.docCount} {course.docCount === 1 ? 'Note' : 'Notes'}
+                      </span>
+                    )}
+                    <ChevronRight size={20} className="text-muted-foreground opacity-50" />
+                  </div>
                 </button>
               </Card>
             ))
@@ -279,7 +287,7 @@ export function DocumentVaultScreen() {
         </div>
       )}
 
-      {view === 'documents' && (
+      {selectedCourse && (
         <>
           <Card className="p-4 mb-6 space-y-4">
             {saveError && <div className="text-red-500 text-sm">{saveError}</div>}
@@ -295,7 +303,7 @@ export function DocumentVaultScreen() {
                 />
                 <label 
                   htmlFor="doc-upload"
-                  className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-xl cursor-pointer transition-colors"
+                  className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-xl cursor-pointer active:scale-95 transition-transform"
                 >
                   <FileUp size={24} className="text-primary mb-2 opacity-80" />
                   <span className="text-sm font-medium text-primary">Upload Note (PDF/JPG/PNG)</span>
@@ -339,7 +347,7 @@ export function DocumentVaultScreen() {
                   disabled={!title.trim()}
                   onClick={handleSave}
                 >
-                  Save to {getActiveCourseName()}
+                  Save to {selectedCourse.name || 'Unnamed Course'}
                 </Button>
               </div>
             )}
@@ -358,12 +366,12 @@ export function DocumentVaultScreen() {
               </div>
             ) : (
               documents.map(doc => {
-                const isPdf = doc.mimeType === 'application/pdf' || (!doc.mimeType && !doc.imageData);
+                const isPdf = doc.mimeType === 'application/pdf' || (!doc.mimeType && !doc.fileUri);
                 return (
                   <Card key={doc.id} className="p-1">
                     <div className="flex items-center justify-between pl-3 p-1">
                       <button 
-                        className="flex items-center flex-1 text-left active:opacity-70 transition-opacity py-2"
+                        className="flex items-center flex-1 text-left active:scale-95 transition-transform py-2"
                         onClick={() => handleOpenDocument(doc)}
                       >
                         {isPdf ? (

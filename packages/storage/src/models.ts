@@ -61,7 +61,8 @@ export interface AcademicEvent {
 
 export interface StudentDocument {
   id: string;
-  courseId?: string; // Optional for legacy unassigned docs
+  courseId?: string; // Relational link to Course
+  semesterId?: string; // Relational link to Semester
   title: string; 
   imageData?: string; // Legacy support
   fileData?: string; // Legacy Base64 string of the file
