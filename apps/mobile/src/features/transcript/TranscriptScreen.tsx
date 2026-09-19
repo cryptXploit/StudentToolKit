@@ -10,9 +10,15 @@ import { Link } from 'react-router-dom';
 export function TranscriptScreen() {
   const [newSemesterName, setNewSemesterName] = useState('');
 
-  const semesters = useLiveQuery(() => 
-    db.semesters.orderBy('createdAt').toArray()
-  );
+  const semesters = useLiveQuery(async () => {
+    try {
+      if (!db || typeof db.semesters === 'undefined') return [];
+      return await db.semesters.orderBy('createdAt').toArray();
+    } catch (error) {
+      console.error("Dexie Query Failed:", error);
+      return [];
+    }
+  }, []);
 
   const handleAddSemester = async () => {
     if (!newSemesterName.trim()) return;
@@ -80,7 +86,7 @@ export function TranscriptScreen() {
               </Link>
               <Button 
                 variant="ghost" 
-                className="p-3 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                 onClick={() => handleDeleteSemester(semester.id)}
               >
                 <Trash2 size={20} />

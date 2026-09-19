@@ -16,13 +16,25 @@ export function SemesterDetailScreen() {
   const [courseCredit, setCourseCredit] = useState('');
   const [courseGrade, setCourseGrade] = useState('');
 
-  const semester = useLiveQuery(() => 
-    semesterId ? db.semesters.get(semesterId) : undefined
-  );
+  const semester = useLiveQuery(async () => {
+    try {
+      if (!db || !semesterId) return null;
+      return await db.semesters.get(semesterId);
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return null;
+    }
+  }, [semesterId]);
 
-  const courses = useLiveQuery(() => 
-    semesterId ? db.courses.where({ semesterId }).toArray() : []
-  );
+  const courses = useLiveQuery(async () => {
+    try {
+      if (!db || !semesterId) return [];
+      return await db.courses.where({ semesterId }).toArray();
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return [];
+    }
+  }, [semesterId]);
 
   const handleAddCourse = async () => {
     if (!semesterId) return;
@@ -172,7 +184,7 @@ export function SemesterDetailScreen() {
               </Link>
               <Button 
                 variant="ghost" 
-                className="p-3 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                 onClick={(e) => {
                   e.preventDefault();
                   handleDeleteCourse(course.id);

@@ -205,7 +205,7 @@ export function CumulativeCGPAScreen() {
             </div>
             <Button
               variant="ghost"
-              className="p-2 h-10 w-10 shrink-0 text-slate-400 hover:text-red-500"
+              className="p-2 h-10 w-10 shrink-0 text-muted-foreground hover:text-red-500"
               onClick={() => removeSemester(semester.id)}
               disabled={semesters.length <= 1}
             >

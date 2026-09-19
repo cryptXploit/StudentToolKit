@@ -115,7 +115,7 @@ export function PlannerScreen() {
 
             return (
               <Card key={event.id} className="p-4 flex items-center">
-                <button onClick={() => toggleStatus(event.id, event.isCompleted)} className="mr-4 text-slate-400 hover:text-primary transition-colors">
+                <button onClick={() => toggleStatus(event.id, event.isCompleted)} className="mr-4 text-muted-foreground hover:text-primary transition-colors">
                   {event.isCompleted ? <CheckCircle2 className="text-primary"/> : <Circle/>}
                 </button>
                 <div className="flex-1">
@@ -123,7 +123,7 @@ export function PlannerScreen() {
                   <p className="text-xs text-muted mt-1 uppercase tracking-wider">{event.type}</p>
                 </div>
                 <div className="flex flex-col items-end justify-center">
-                  <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-slate-400' : 'text-primary font-medium'}`}>
+                  <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-muted-foreground' : 'text-primary font-medium'}`}>
                     <div className="flex items-center justify-end">
                       <Clock className="mr-1" size={14} />
                       <span>

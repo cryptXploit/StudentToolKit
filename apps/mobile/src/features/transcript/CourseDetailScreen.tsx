@@ -18,17 +18,35 @@ export function CourseDetailScreen() {
   const [endTime, setEndTime] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
 
-  const course = useLiveQuery(() => 
-    courseId ? db.courses.get(courseId) : undefined
-  );
+  const course = useLiveQuery(async () => {
+    try {
+      if (!db || !courseId) return null;
+      return await db.courses.get(courseId);
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return null;
+    }
+  }, [courseId]);
 
-  const routineSlots = useLiveQuery(() => 
-    courseId ? db.routine.where({ courseId }).toArray() : []
-  );
+  const routineSlots = useLiveQuery(async () => {
+    try {
+      if (!db || !courseId) return [];
+      return await db.routine.where({ courseId }).toArray();
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return [];
+    }
+  }, [courseId]);
 
-  const attendanceLogs = useLiveQuery(() => 
-    courseId ? db.attendance.where({ courseId }).reverse().sortBy('date') : []
-  );
+  const attendanceLogs = useLiveQuery(async () => {
+    try {
+      if (!db || !courseId) return [];
+      return await db.attendance.where({ courseId }).reverse().sortBy('date');
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return [];
+    }
+  }, [courseId]);
 
   // calculate attendance on the fly
   const currentPercentage = useMemo(() => 
@@ -217,7 +235,7 @@ export function CourseDetailScreen() {
               </div>
               <Button 
                 variant="ghost" 
-                className="p-2 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                className="p-2 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                 onClick={() => handleDeleteRoutine(slot.id)}
               >
                 <Trash2 size={18} />
@@ -232,7 +250,7 @@ export function CourseDetailScreen() {
         
         <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary">
           <p className="text-sm text-muted mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
-          <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-slate-400' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
+          <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-muted-foreground opacity-50' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
             {attendanceLogs && attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
           </div>
         </Card>
@@ -281,7 +299,7 @@ export function CourseDetailScreen() {
                 </div>
                 <Button 
                   variant="ghost" 
-                  className="p-2 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                  className="p-2 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                   onClick={async () => {
                     hapticImpact('medium');
                     await db.attendance.delete(log.id);

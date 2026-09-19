@@ -143,7 +143,7 @@ export function DocumentVaultScreen() {
                 <h4 className="font-semibold text-foreground truncate pl-1">{doc.title}</h4>
                 <Button 
                   variant="ghost" 
-                  className="p-2 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                  className="p-2 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
                   onClick={() => handleDelete(doc.id)}
                 >
                   <Trash2 size={18} />

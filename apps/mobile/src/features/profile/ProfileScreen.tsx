@@ -226,8 +226,8 @@ export function ProfileScreen() {
 
       {/* Legal & Version Footer */}
       <footer className="mt-8 mb-4 text-center">
-        <p className="text-sm text-slate-400">Student OS v1.0.0</p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-sm text-muted-foreground">Student OS v1.0.0</p>
+        <p className="text-xs text-muted-foreground mt-1">
           <a href="https://studentos.app/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
             Privacy Policy
           </a>
