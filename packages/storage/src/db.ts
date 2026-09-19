@@ -27,6 +27,14 @@ export class StudentDatabase extends Dexie {
       attendance: 'id, courseId',
       events: 'id, type, date, isCompleted'
     });
+
+    // V3 Schema - Transcript Schema
+    this.version(3).stores({
+      profile: 'id',
+      events: 'id, date, isCompleted',
+      semesters: 'id',
+      courses: 'id, semesterId' // Index semesterId for fast relational queries
+    });
   }
 }
 

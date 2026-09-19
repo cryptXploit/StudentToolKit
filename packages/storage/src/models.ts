@@ -10,21 +10,23 @@ export interface StudentProfile {
 }
 
 export interface Semester {
-  id: string; // e.g., UUID
-  name: string; // e.g., 'Fall 2024' or 'Semester 5'
-  startDate?: number;
-  endDate?: number;
-  isCurrent: boolean;
+  id: string;
+  name: string; // e.g., "Fall 2026"
+  term?: string;
+  year?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Course {
-  id: string; // UUID
-  semesterId: string; // Foreign key to Semester
-  code: string; // e.g., 'ICE 301'
-  title?: string;
-  credits: number;
-  gradePoint?: number; // Null if not completed yet
-  targetGradePoint?: number; // Used for "What-If" scenarios
+  id: string;
+  semesterId: string; // Relational link to Semester
+  code?: string; // e.g., "CSE 101"
+  name: string; // e.g., "Intro to Programming"
+  credit: number;
+  grade?: number; // Numeric grade (e.g., 4.0, 3.7)
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AttendanceRecord {
