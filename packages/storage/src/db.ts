@@ -59,6 +59,14 @@ export class StudentDatabase extends Dexie {
       attendance: 'id, courseId, date, [courseId+date]',
       documents: 'id, createdAt' // Sortable by date added
     });
+
+    this.profile = this.table('profile');
+    this.semesters = this.table('semesters');
+    this.courses = this.table('courses');
+    this.routine = this.table('routine');
+    this.attendance = this.table('attendance');
+    this.events = this.table('events');
+    this.documents = this.table('documents');
   }
 }
 

@@ -149,7 +149,7 @@ export function SemesterDetailScreen() {
       </Card>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
-        {courses === undefined ? (
+        {courses === undefined || !Array.isArray(courses) ? (
           <div className="flex justify-center p-8">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
           </div>

@@ -5,6 +5,7 @@ import { generateEcosystemBackup, restoreEcosystemBackup } from '../../lib/backu
 import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield } from 'lucide-react';
 import { Button, Card, Input, Label } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
+import { Link } from 'react-router-dom';
 
 export function ProfileScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -179,6 +180,24 @@ export function ProfileScreen() {
       >
         {isSaved ? <><Check className="mr-2" size={20} />Saved Locally</> : 'Save Profile'}
       </Button>
+
+      {/* App Settings Section */}
+      <section className="mt-8">
+        <Link to="/settings">
+          <Card className="flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors cursor-pointer">
+            <div className="flex items-center text-foreground">
+              <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings text-muted-foreground"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">App Settings</h3>
+                <p className="text-xs text-muted">Theme, Appearance & Preferences</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right text-muted opacity-50"><path d="m9 18 6-6-6-6"/></svg>
+          </Card>
+        </Link>
+      </section>
 
       {/* Data Vault Section */}
       <section className="mt-10 mb-8 border-t border-slate-200 dark:border-slate-800 pt-8">

@@ -17,8 +17,12 @@ if (Capacitor.isNativePlatform()) {
   initializeAds();
 }
 
+import { ThemeProvider } from './components/ThemeProvider';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>,
 );

@@ -62,7 +62,7 @@ export function TranscriptScreen() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
-        {semesters === undefined ? (
+        {semesters === undefined || !Array.isArray(semesters) ? (
           <div className="flex justify-center p-8">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
           </div>

@@ -19,6 +19,7 @@ const TranscriptScreen = lazy(() => import('./features/transcript/TranscriptScre
 const SemesterDetailScreen = lazy(() => import('./features/transcript/SemesterDetailScreen').then(m => ({ default: m.SemesterDetailScreen })));
 const CourseDetailScreen = lazy(() => import('./features/transcript/CourseDetailScreen').then(m => ({ default: m.CourseDetailScreen })));
 const DocumentVaultScreen = lazy(() => import('./features/tools/DocumentVaultScreen').then(m => ({ default: m.DocumentVaultScreen })));
+const SettingsScreen = lazy(() => import('./features/settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 
 function Navigation() {
   const location = useLocation();
@@ -78,6 +79,7 @@ function AppRouterContent() {
               <Route path="/tools/vault" element={<DocumentVaultScreen />} />
               <Route path="/planner" element={<PlannerScreen />} />
               <Route path="/profile" element={<ProfileScreen />} />
+              <Route path="/settings" element={<SettingsScreen />} />
             </Routes>
           </Suspense>
         </GlobalErrorBoundary>
