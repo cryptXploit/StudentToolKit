@@ -6,6 +6,7 @@ import { calculateAttendancePercentage } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
+import { generateSafeId } from '../../lib/id';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -69,7 +70,7 @@ export function CourseDetailScreen() {
           updatedAt: new Date().toISOString() 
         });
       } else {
-        const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+        const safeId = generateSafeId();
         await db.attendance.put({
           id: safeId,
           courseId,
@@ -99,7 +100,7 @@ export function CourseDetailScreen() {
     if (!courseId || !startTime || !endTime) return;
 
     try {
-      const safeId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      const safeId = generateSafeId();
       await db.routine.put({
         id: safeId,
         courseId,
@@ -226,6 +227,8 @@ export function CourseDetailScreen() {
           <div className="flex justify-center p-8">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
           </div>
+        ) : !Array.isArray(sortedSlots) ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">Loading routine...</div>
         ) : sortedSlots.length === 0 ? (
           <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
             <p className="text-sm text-muted-foreground">No classes scheduled yet. Add your class times above.</p>
@@ -297,7 +300,9 @@ export function CourseDetailScreen() {
           </Button>
         </div>
 
-        {attendanceLogs && attendanceLogs.length > 0 && (
+        {!Array.isArray(attendanceLogs) ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">Loading logs...</div>
+        ) : attendanceLogs.length > 0 && (
           <div className="mt-4 space-y-2">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Recent Logs</h4>
             {attendanceLogs.slice(0, 5).map(log => (

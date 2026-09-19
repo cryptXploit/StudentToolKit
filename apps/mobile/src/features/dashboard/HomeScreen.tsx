@@ -6,6 +6,7 @@ import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin
 import { Card, Button } from '@student-os/ui';
 import { calculateDaysRemaining } from '@student-os/engine';
 import { hapticImpact } from '../../lib/haptics';
+import { generateSafeId } from '../../lib/id';
 
 function formatTime(time24: string) {
   if (!time24) return '';
@@ -22,9 +23,10 @@ export function HomeScreen() {
   const today = new Date().toLocaleDateString('en-CA');
   
   const nextEvent = useLiveQuery(() => {
-    return db.events.orderBy('date').toArray().then(events => 
-      events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1)
-    );
+    return db.events.toArray().then(events => {
+      events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      return events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
+    });
   });
 
   const todaysClasses = useLiveQuery(async () => {
@@ -63,7 +65,7 @@ export function HomeScreen() {
         });
       } else {
         await db.attendance.put({
-          id: crypto.randomUUID(),
+          id: generateSafeId(),
           courseId,
           date: today,
           status,
@@ -204,6 +206,8 @@ export function HomeScreen() {
             <Calendar className="text-muted-foreground mb-2 opacity-50" size={32} />
             <p className="text-sm text-muted-foreground">No classes today. Enjoy your free time!</p>
           </Card>
+        ) : !Array.isArray(todaysClasses) ? (
+          <div className="text-sm text-muted-foreground p-4 text-center">Loading classes...</div>
         ) : (
           <div className="space-y-4">
             {todaysClasses.map(slot => (
