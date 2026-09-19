@@ -32,11 +32,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex flex-col items-center justify-center h-full w-full bg-background p-6">
           <div className="bg-card border border-slate-200 dark:border-slate-800 p-8 rounded-3xl max-w-sm w-full text-center shadow-sm">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full mb-4 text-muted">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full mb-4 text-muted-foreground">
               <RefreshCw size={24} />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-2">Something went wrong</h2>
-            <p className="text-sm text-muted mb-6 leading-relaxed">
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               We encountered an unexpected error. Don't worry, your data is saved locally.
             </p>
             <button

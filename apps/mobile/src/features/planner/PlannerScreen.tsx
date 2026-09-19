@@ -63,7 +63,7 @@ export function PlannerScreen() {
       <header className="mb-6 mt-2 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Academic Timeline</h1>
-          <p className="text-muted text-sm mt-1">Deadlines and exams</p>
+          <p className="text-muted-foreground text-sm mt-1">Deadlines and exams</p>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
@@ -102,7 +102,7 @@ export function PlannerScreen() {
 
       <div className="flex-1 overflow-y-auto pb-6 space-y-3">
         {activeEvents.length === 0 && !isAdding ? (
-          <div className="flex flex-col items-center justify-center text-center h-40 text-muted">
+          <div className="flex flex-col items-center justify-center text-center h-40 text-muted-foreground">
             <Calendar className="mb-3 opacity-50" size={40} />
             <p className="font-medium">No upcoming events</p>
             <p className="text-sm">Enjoy your free time!</p>
@@ -120,7 +120,7 @@ export function PlannerScreen() {
                 </button>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground leading-tight">{event.title}</h3>
-                  <p className="text-xs text-muted mt-1 uppercase tracking-wider">{event.type}</p>
+                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{event.type}</p>
                 </div>
                 <div className="flex flex-col items-end justify-center">
                   <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-muted-foreground' : 'text-primary font-medium'}`}>

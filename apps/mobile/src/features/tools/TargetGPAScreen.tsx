@@ -56,19 +56,19 @@ export function TargetGPAScreen() {
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
       <header className="mb-6 flex items-center">
-        <Link className="p-2 -ml-2 mr-2 text-muted hover:text-foreground" to="/tools">
+        <Link className="p-2 -ml-2 mr-2 text-muted-foreground hover:text-foreground" to="/tools">
           <ArrowLeft size={24} />
         </Link>
         <div>
           <h1 className="text-xl font-bold text-foreground">Target CGPA</h1>
-          <p className="text-muted text-sm">Scale: {maxScale.toFixed(2)}</p>
+          <p className="text-muted-foreground text-sm">Scale: {maxScale.toFixed(2)}</p>
         </div>
       </header>
 
       <div className="space-y-4 mb-6">
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-3">
-            <Label className="text-xs mb-1 text-muted">Current CGPA</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Current CGPA</Label>
             <Input
               type="number" step="0.01" min="0" max={maxScale}
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
@@ -76,7 +76,7 @@ export function TargetGPAScreen() {
             />
           </Card>
           <Card className="p-3">
-            <Label className="text-xs mb-1 text-muted">Completed Credits</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Completed Credits</Label>
             <Input
               type="number" step="0.5" min="0"
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
@@ -84,7 +84,7 @@ export function TargetGPAScreen() {
             />
           </Card>
           <Card className="p-3 border-l-4 border-l-primary">
-            <Label className="text-xs mb-1 text-muted">Target CGPA</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Target CGPA</Label>
             <Input
               type="number" step="0.01" min="0" max={maxScale}
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
@@ -92,7 +92,7 @@ export function TargetGPAScreen() {
             />
           </Card>
           <Card className="p-3">
-            <Label className="text-xs mb-1 text-muted">Remaining Credits</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Remaining Credits</Label>
             <Input
               type="number" step="0.5" min="0"
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"

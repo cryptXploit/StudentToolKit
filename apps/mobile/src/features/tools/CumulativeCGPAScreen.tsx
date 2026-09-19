@@ -115,23 +115,23 @@ export function CumulativeCGPAScreen() {
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
       <header className="mb-6 flex items-center">
-        <Link className="p-2 -ml-2 mr-2 text-muted hover:text-foreground" to="/tools">
+        <Link className="p-2 -ml-2 mr-2 text-muted-foreground hover:text-foreground" to="/tools">
           <ArrowLeft size={24} />
         </Link>
         <div>
           <h1 className="text-xl font-bold text-foreground">Cumulative CGPA</h1>
-          <p className="text-muted text-sm">Combine past semesters</p>
+          <p className="text-muted-foreground text-sm">Combine past semesters</p>
         </div>
       </header>
 
       <Card className="mb-6 p-5 border-l-4 border-l-primary">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-medium text-muted mb-1">Cumulative CGPA</h2>
+            <h2 className="text-sm font-medium text-muted-foreground mb-1">Cumulative CGPA</h2>
             <div className="text-4xl font-bold text-primary">{cgpa.toFixed(2)}</div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">Total Credits</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Total Credits</p>
             <div className="text-2xl font-semibold text-foreground">{totalCredits}</div>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function CumulativeCGPAScreen() {
           </Button>
         )}
 
-        <div className="flex px-1 text-xs font-medium text-muted uppercase tracking-wider mb-2">
+        <div className="flex px-1 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
           <div className="flex-[2] mr-2">Semester (Opt)</div>
           <div className="flex-1 mr-2">Credits</div>
           <div className="flex-1 mr-12">GPA</div>

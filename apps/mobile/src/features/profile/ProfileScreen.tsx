@@ -86,7 +86,7 @@ export function ProfileScreen() {
     <div className="p-4 sm:p-6 max-w-md mx-auto">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">Academic Profile</h1>
-        <p className="text-muted text-sm mt-1 mb-3">Set your context for accurate calculations.</p>
+        <p className="text-muted-foreground text-sm mt-1 mb-3">Set your context for accurate calculations.</p>
         <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-3 flex items-start">
           <Shield className="mr-2 mt-0.5 shrink-0" size={16} />
           <p className="text-xs leading-relaxed opacity-90">
@@ -191,21 +191,21 @@ export function ProfileScreen() {
               </div>
               <div>
                 <h3 className="font-semibold text-sm">App Settings</h3>
-                <p className="text-xs text-muted">Theme, Appearance & Preferences</p>
+                <p className="text-xs text-muted-foreground">Theme, Appearance & Preferences</p>
               </div>
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right text-muted opacity-50"><path d="m9 18 6-6-6-6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right text-muted-foreground opacity-50"><path d="m9 18 6-6-6-6"/></svg>
           </Card>
         </Link>
       </section>
 
       {/* Data Vault Section */}
       <section className="mt-10 mb-8 border-t border-slate-200 dark:border-slate-800 pt-8">
-        <div className="flex items-center justify-center mb-4 text-muted">
+        <div className="flex items-center justify-center mb-4 text-muted-foreground">
           <Shield className="mr-1.5" size={16} />
           <h2 className="text-xs font-semibold uppercase tracking-wider">Offline Data Vault</h2>
         </div>
-        <p className="text-center text-xs text-muted mb-4 px-4 leading-relaxed">
+        <p className="text-center text-xs text-muted-foreground mb-4 px-4 leading-relaxed">
           Your data is stored securely on your device. Export a backup before uninstalling or moving to a new phone.
         </p>
         

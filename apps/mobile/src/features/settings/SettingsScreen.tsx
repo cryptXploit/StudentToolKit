@@ -21,7 +21,7 @@ export function SettingsScreen() {
         </Button>
         <div>
           <h1 className="text-xl font-bold text-foreground">App Settings</h1>
-          <p className="text-muted text-sm mt-0.5">Manage preferences</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Manage preferences</p>
         </div>
       </header>
 

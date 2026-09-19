@@ -44,21 +44,26 @@ export function SemesterDetailScreen() {
 
     if (isNaN(parsedCredit) || parsedCredit <= 0) return;
 
-    await db.courses.put({
-      id: crypto.randomUUID(),
-      semesterId,
-      name: courseName.trim(),
-      credit: parsedCredit,
-      grade: parsedGrade,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    try {
+      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      await db.courses.put({
+        id: safeId,
+        semesterId,
+        name: courseName.trim(),
+        credit: parsedCredit,
+        grade: parsedGrade,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
 
-    setCourseName('');
-    setCourseCredit('');
-    setCourseGrade('');
-    await syncTranscriptToProfile();
-    hapticImpact('light');
+      setCourseName('');
+      setCourseCredit('');
+      setCourseGrade('');
+      await syncTranscriptToProfile();
+      hapticImpact('light');
+    } catch (e: any) {
+      alert("Failed to add course: " + e.message);
+    }
   };
 
   const handleDeleteCourse = async (id: string) => {
@@ -95,7 +100,7 @@ export function SemesterDetailScreen() {
   if (semester === null) {
     return (
       <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col items-center justify-center">
-        <AlertCircle size={48} className="text-muted mb-4" />
+        <AlertCircle size={48} className="text-muted-foreground mb-4" />
         <h2 className="text-xl font-bold mb-2">Semester Not Found</h2>
         <Button onClick={() => navigate(-1)} variant="secondary">Go Back</Button>
       </div>
@@ -124,41 +129,43 @@ export function SemesterDetailScreen() {
         </div>
       </Alert>
 
-      <Card className="p-4 mb-6 space-y-3">
-        <Input 
-          placeholder="Course Name (e.g., Intro to CS)" 
-          value={courseName}
-          onChange={(e) => setCourseName(e.target.value)}
-        />
-        <div className="flex gap-2">
+      <form onSubmit={(e) => { e.preventDefault(); handleAddCourse(); }}>
+        <Card className="p-4 mb-6 space-y-3">
           <Input 
-            placeholder="Credits" 
-            type="number"
-            step="0.5"
-            min="0"
-            value={courseCredit}
-            onChange={(e) => setCourseCredit(e.target.value)}
-            className="flex-1"
+            placeholder="Course Name (e.g., Intro to CS)" 
+            value={courseName}
+            onChange={(e) => setCourseName(e.target.value)}
           />
-          <Input 
-            placeholder="Grade (e.g. 4.0)" 
-            type="number"
-            step="0.1"
-            min="0"
-            value={courseGrade}
-            onChange={(e) => setCourseGrade(e.target.value)}
-            className="flex-1"
-          />
-          <Button 
-            variant="primary" 
-            onClick={handleAddCourse}
-            disabled={!courseCredit || isNaN(parseFloat(courseCredit)) || parseFloat(courseCredit) <= 0}
-            className="px-4 shrink-0"
-          >
-            <Plus size={20} />
-          </Button>
-        </div>
-      </Card>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Credits" 
+              type="number"
+              step="0.5"
+              min="0"
+              value={courseCredit}
+              onChange={(e) => setCourseCredit(e.target.value)}
+              className="flex-1"
+            />
+            <Input 
+              placeholder="Grade (e.g. 4.0)" 
+              type="number"
+              step="0.1"
+              min="0"
+              value={courseGrade}
+              onChange={(e) => setCourseGrade(e.target.value)}
+              className="flex-1"
+            />
+            <Button 
+              type="submit"
+              variant="primary" 
+              disabled={!courseCredit || isNaN(parseFloat(courseCredit)) || parseFloat(courseCredit) <= 0}
+              className="px-4 shrink-0"
+            >
+              <Plus size={20} />
+            </Button>
+          </div>
+        </Card>
+      </form>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
         {courses === undefined || !Array.isArray(courses) ? (
@@ -167,7 +174,7 @@ export function SemesterDetailScreen() {
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center p-6 opacity-70">
-            <p className="text-sm text-muted">No courses added yet. Add your first course above.</p>
+            <p className="text-sm text-muted-foreground">No courses added yet. Add your first course above.</p>
           </div>
         ) : (
           courses.map(course => (
@@ -175,12 +182,12 @@ export function SemesterDetailScreen() {
               <Link to={`/course/${course.id}`} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg">
                 <div>
                   <h3 className="font-semibold text-foreground">{course.name || 'Unnamed Course'}</h3>
-                  <p className="text-xs text-muted mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {course.credit} Credits
                     {typeof course.grade === 'number' && ` • Grade: ${course.grade}`}
                   </p>
                 </div>
-                <ChevronRight size={20} className="text-muted opacity-50" />
+                <ChevronRight size={20} className="text-muted-foreground opacity-50" />
               </Link>
               <Button 
                 variant="ghost" 

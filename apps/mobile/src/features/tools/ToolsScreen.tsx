@@ -64,7 +64,7 @@ export function ToolsScreen() {
     <div className="p-4 sm:p-6 max-w-md mx-auto">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Utility Tools</h1>
-        <p className="text-muted text-sm mt-1">Calculators and decision engines.</p>
+        <p className="text-muted-foreground text-sm mt-1">Calculators and decision engines.</p>
       </header>
       
       <div className="grid gap-4">
@@ -78,7 +78,7 @@ export function ToolsScreen() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">{tool.title}</h3>
-                  <p className="text-sm text-muted mt-0.5">{tool.description}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{tool.description}</p>
                 </div>
               </Card>
             </Link>

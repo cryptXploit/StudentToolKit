@@ -57,28 +57,33 @@ export function CourseDetailScreen() {
   const handleLogAttendance = async (status: 'present' | 'absent' | 'late') => {
     if (!courseId) return;
     
-    // Natively get local YYYY-MM-DD
-    const today = new Date().toLocaleDateString('en-CA');
-    
-    const existingLog = await db.attendance.where('[courseId+date]').equals([courseId, today]).first();
-    
-    if (existingLog) {
-      await db.attendance.update(existingLog.id, { 
-        status, 
-        updatedAt: new Date().toISOString() 
-      });
-    } else {
-      await db.attendance.put({
-        id: crypto.randomUUID(),
-        courseId,
-        date: today,
-        status,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+    try {
+      // Natively get local YYYY-MM-DD
+      const today = new Date().toLocaleDateString('en-CA');
+      
+      const existingLog = await db.attendance.where('[courseId+date]').equals([courseId, today]).first();
+      
+      if (existingLog) {
+        await db.attendance.update(existingLog.id, { 
+          status, 
+          updatedAt: new Date().toISOString() 
+        });
+      } else {
+        const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+        await db.attendance.put({
+          id: safeId,
+          courseId,
+          date: today,
+          status,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      hapticImpact('light');
+    } catch (e: any) {
+      alert("Failed to log attendance: " + e.message);
     }
-    
-    hapticImpact('light');
   };
 
   // Sort slots by day then by startTime
@@ -92,19 +97,24 @@ export function CourseDetailScreen() {
   const handleAddRoutine = async () => {
     if (!courseId || !startTime || !endTime) return;
 
-    await db.routine.put({
-      id: crypto.randomUUID(),
-      courseId,
-      dayOfWeek: parseInt(dayOfWeek, 10),
-      startTime,
-      endTime,
-      roomNumber: roomNumber.trim(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    try {
+      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      await db.routine.put({
+        id: safeId,
+        courseId,
+        dayOfWeek: parseInt(dayOfWeek, 10),
+        startTime,
+        endTime,
+        roomNumber: roomNumber.trim(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
 
-    setRoomNumber('');
-    hapticImpact('light');
+      setRoomNumber('');
+      hapticImpact('light');
+    } catch (e: any) {
+      alert("Failed to add routine: " + e.message);
+    }
   };
 
   const handleDeleteRoutine = async (id: string) => {
@@ -133,7 +143,7 @@ export function CourseDetailScreen() {
   if (course === null) {
     return (
       <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col items-center justify-center">
-        <AlertCircle size={48} className="text-muted mb-4" />
+        <AlertCircle size={48} className="text-muted-foreground mb-4" />
         <h2 className="text-xl font-bold mb-2">Course Not Found</h2>
         <Button onClick={() => navigate(-1)} variant="secondary">Go Back</Button>
       </div>
@@ -148,61 +158,63 @@ export function CourseDetailScreen() {
         </Button>
         <div className="truncate">
           <h1 className="text-xl font-bold text-foreground truncate">{course.name || 'Unnamed Course'}</h1>
-          <p className="text-muted text-sm mt-0.5">Timetable Builder</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Timetable Builder</p>
         </div>
       </header>
 
-      <Card className="p-4 mb-6 space-y-4">
-        <div>
-          <Label className="text-xs mb-1 text-muted">Day of Week</Label>
-          <select 
-            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-foreground"
-            value={dayOfWeek}
-            onChange={(e) => setDayOfWeek(e.target.value)}
+      <form onSubmit={(e) => { e.preventDefault(); handleAddRoutine(); }}>
+        <Card className="p-4 mb-6 space-y-4">
+          <div>
+            <Label className="text-xs mb-1 text-muted-foreground">Day of Week</Label>
+            <select 
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-foreground"
+              value={dayOfWeek}
+              onChange={(e) => setDayOfWeek(e.target.value)}
+            >
+              {DAYS.map((day, index) => (
+                <option key={index} value={index}>{day}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label className="text-xs mb-1 text-muted-foreground">Start Time</Label>
+              <Input 
+                type="time" 
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs mb-1 text-muted-foreground">End Time</Label>
+              <Input 
+                type="time" 
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs mb-1 text-muted-foreground">Room / Location (Optional)</Label>
+            <Input 
+              placeholder="e.g. Science Building 302" 
+              value={roomNumber}
+              onChange={(e) => setRoomNumber(e.target.value)}
+            />
+          </div>
+
+          <Button 
+            type="submit"
+            variant="primary" 
+            disabled={!startTime || !endTime}
+            className="w-full py-3"
           >
-            {DAYS.map((day, index) => (
-              <option key={index} value={index}>{day}</option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <Label className="text-xs mb-1 text-muted">Start Time</Label>
-            <Input 
-              type="time" 
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-          </div>
-          <div className="flex-1">
-            <Label className="text-xs mb-1 text-muted">End Time</Label>
-            <Input 
-              type="time" 
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs mb-1 text-muted">Room / Location (Optional)</Label>
-          <Input 
-            placeholder="e.g. Science Building 302" 
-            value={roomNumber}
-            onChange={(e) => setRoomNumber(e.target.value)}
-          />
-        </div>
-
-        <Button 
-          variant="primary" 
-          onClick={handleAddRoutine}
-          disabled={!startTime || !endTime}
-          className="w-full py-3"
-        >
-          <Plus size={18} className="mr-2" /> Add to Schedule
-        </Button>
-      </Card>
+            <Plus size={18} className="mr-2" /> Add to Schedule
+          </Button>
+        </Card>
+      </form>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
         <h3 className="text-sm font-medium text-foreground mb-3">Weekly Schedule</h3>
@@ -213,14 +225,14 @@ export function CourseDetailScreen() {
           </div>
         ) : sortedSlots.length === 0 ? (
           <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-            <p className="text-sm text-muted">No classes scheduled yet. Add your class times above.</p>
+            <p className="text-sm text-muted-foreground">No classes scheduled yet. Add your class times above.</p>
           </div>
         ) : (
           sortedSlots.map(slot => (
             <Card key={slot.id} className="flex items-center justify-between p-4">
               <div>
                 <h4 className="font-semibold text-foreground text-base mb-1">{DAYS[slot.dayOfWeek]}</h4>
-                <div className="flex items-center text-xs text-muted space-x-3">
+                <div className="flex items-center text-xs text-muted-foreground space-x-3">
                   <div className="flex items-center">
                     <Clock size={12} className="mr-1" />
                     <span>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
@@ -249,7 +261,7 @@ export function CourseDetailScreen() {
         <h3 className="text-sm font-medium text-foreground mb-1">Attendance Tracker</h3>
         
         <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary">
-          <p className="text-sm text-muted mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
+          <p className="text-sm text-muted-foreground mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
           <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-muted-foreground opacity-50' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
             {attendanceLogs && attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
           </div>
@@ -284,7 +296,7 @@ export function CourseDetailScreen() {
 
         {attendanceLogs && attendanceLogs.length > 0 && (
           <div className="mt-4 space-y-2">
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Recent Logs</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Recent Logs</h4>
             {attendanceLogs.slice(0, 5).map(log => (
               <Card key={log.id} className="flex items-center justify-between p-3">
                 <div>

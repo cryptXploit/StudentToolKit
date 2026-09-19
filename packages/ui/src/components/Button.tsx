@@ -11,7 +11,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     let variantStyles = '';
     switch (variant) {
       case 'primary':
-        variantStyles = 'bg-primary text-white hover:bg-blue-700';
+        variantStyles = 'bg-primary text-primary-foreground hover:opacity-90';
         break;
       case 'secondary':
         variantStyles = 'bg-slate-100 dark:bg-slate-800 text-foreground hover:bg-slate-200 dark:hover:bg-slate-700';
@@ -20,7 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         variantStyles = 'bg-red-500 text-white hover:bg-red-600';
         break;
       case 'ghost':
-        variantStyles = 'bg-transparent text-muted hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-foreground';
+        variantStyles = 'bg-transparent text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-foreground';
         break;
     }
 

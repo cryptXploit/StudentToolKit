@@ -39,8 +39,8 @@ function Navigation() {
           const Icon = item.icon;
           return (
             <Link className="flex flex-col items-center justify-center w-full h-full active:scale-95 transition-transform" key={item.path} to={item.path}>
-              <Icon className={isActive ? 'text-primary' : 'text-muted'} size={24} />
-              <span className={`text-[10px] mt-1 ${isActive ? 'text-primary font-medium' : 'text-muted'}`}>
+              <Icon className={isActive ? 'text-primary' : 'text-muted-foreground'} size={24} />
+              <span className={`text-[10px] mt-1 ${isActive ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                 {item.label}
               </span>
             </Link>

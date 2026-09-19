@@ -36,12 +36,12 @@ export function AttendanceScreen() {
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
       <header className="mb-6 flex items-center">
-        <Link className="p-2 -ml-2 mr-2 text-muted hover:text-foreground" to="/tools">
+        <Link className="p-2 -ml-2 mr-2 text-muted-foreground hover:text-foreground" to="/tools">
           <ArrowLeft size={24} />
         </Link>
         <div>
           <h1 className="text-xl font-bold text-foreground">Attendance Engine</h1>
-          <p className="text-muted text-sm">Can you safely miss this class?</p>
+          <p className="text-muted-foreground text-sm">Can you safely miss this class?</p>
         </div>
       </header>
 
@@ -49,7 +49,7 @@ export function AttendanceScreen() {
         <Card className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs mb-1 text-muted">Attended Classes</Label>
+              <Label className="text-xs mb-1 text-muted-foreground">Attended Classes</Label>
               <Input
                 type="number" min="0" step="1"
                 className="text-lg font-semibold"
@@ -57,7 +57,7 @@ export function AttendanceScreen() {
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 text-muted">Total Classes</Label>
+              <Label className="text-xs mb-1 text-muted-foreground">Total Classes</Label>
               <Input
                 type="number" min="1" step="1"
                 className="text-lg font-semibold"
@@ -66,7 +66,7 @@ export function AttendanceScreen() {
             </div>
           </div>
           <div>
-            <Label className="text-xs mb-1 text-muted">Target Percentage (%)</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Target Percentage (%)</Label>
             <Input
               type="number" min="1" max="100" step="1"
               className="text-lg font-semibold"
@@ -84,7 +84,7 @@ export function AttendanceScreen() {
         ) : result ? (
           <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
             <Card className="p-5 mb-4">
-              <h3 className="text-sm font-medium text-muted mb-1">Current Attendance</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Current Attendance</h3>
               <div className={`text-4xl font-bold ${result.currentPercentage >= parseFloat(targetPercentage) ? 'text-emerald-500' : 'text-red-500'}`}>
                 {result.currentPercentage.toFixed(1)}%
               </div>

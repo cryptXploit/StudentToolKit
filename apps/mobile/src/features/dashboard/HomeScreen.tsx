@@ -109,7 +109,7 @@ export function HomeScreen() {
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">{greeting}</h1>
-        <p className="text-muted text-sm mt-1">{dateString}</p>
+        <p className="text-muted-foreground text-sm mt-1">{dateString}</p>
       </header>
 
       {/* Academic Snapshot */}
@@ -121,7 +121,7 @@ export function HomeScreen() {
         {!profile ? (
           <Card className="p-6">
             <h3 className="text-xl font-bold text-foreground mb-2">Welcome to Student OS</h3>
-            <p className="text-sm text-muted mb-6 leading-relaxed">
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               Your offline academic decision engine. All calculations happen instantly and securely on this device.
             </p>
             <div className="flex flex-col gap-3">
@@ -143,7 +143,7 @@ export function HomeScreen() {
                 <h3 className="font-semibold text-foreground leading-tight">
                   {profile.universityName || 'University Not Set'}
                 </h3>
-                <p className="text-sm text-muted">
+                <p className="text-sm text-muted-foreground">
                   {profile.department || 'Department Not Set'}
                 </p>
               </div>
@@ -152,18 +152,18 @@ export function HomeScreen() {
             <div className="grid grid-cols-2 gap-4">
               {profile.currentCGPA !== undefined && (
                 <div>
-                  <p className="text-xs font-medium text-muted mb-1">Current CGPA</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Current CGPA</p>
                   <p className="text-2xl font-bold text-primary">
                     {profile.currentCGPA.toFixed(2)}
-                    <span className="text-sm font-normal text-muted ml-1">({profile.totalCredits} Cr)</span>
+                    <span className="text-sm font-normal text-muted-foreground ml-1">({profile.totalCredits} Cr)</span>
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-xs font-medium text-muted mb-1">Target CGPA</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Target CGPA</p>
                 <p className="text-2xl font-bold text-foreground">
                   {profile.targetCGPA ? profile.targetCGPA.toFixed(2) : '--'}
-                  <span className="text-sm font-normal text-muted ml-1">/ {profile.maxGradingScale.toFixed(2)}</span>
+                  <span className="text-sm font-normal text-muted-foreground ml-1">/ {profile.maxGradingScale.toFixed(2)}</span>
                 </p>
               </div>
             </div>
@@ -201,15 +201,15 @@ export function HomeScreen() {
           </div>
         ) : todaysClasses.length === 0 ? (
           <Card className="p-5 text-center flex flex-col items-center justify-center">
-            <Calendar className="text-muted mb-2 opacity-50" size={32} />
-            <p className="text-sm text-muted">No classes today. Enjoy your free time!</p>
+            <Calendar className="text-muted-foreground mb-2 opacity-50" size={32} />
+            <p className="text-sm text-muted-foreground">No classes today. Enjoy your free time!</p>
           </Card>
         ) : (
           <div className="space-y-4">
             {todaysClasses.map(slot => (
               <Card key={slot.id} className="p-4 border-l-4 border-l-primary">
                 <h3 className="font-bold text-foreground text-lg mb-2">{slot.courseName}</h3>
-                <div className="flex flex-col gap-1.5 text-sm text-muted">
+                <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <Clock size={14} className="mr-2 opacity-70" />
                     <span>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
@@ -259,7 +259,7 @@ export function HomeScreen() {
                     </div>
                     <button 
                       onClick={() => handleUndoLog(slot.todayLog!.id)}
-                      className="text-xs text-muted hover:text-foreground font-medium underline underline-offset-2"
+                      className="text-xs text-muted-foreground hover:text-foreground font-medium underline underline-offset-2"
                     >
                       Undo
                     </button>
@@ -281,7 +281,7 @@ export function HomeScreen() {
               <Card className="flex items-center justify-between p-4 border-l-4 border-l-primary">
                 <div>
                   <h3 className="font-semibold text-foreground leading-tight">{nextEvent.title}</h3>
-                  <p className="text-xs text-muted mt-1 uppercase tracking-wider">{nextEvent.type}</p>
+                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{nextEvent.type}</p>
                 </div>
                 <div className="text-right">
                   {(() => {
@@ -301,9 +301,9 @@ export function HomeScreen() {
             </Link>
           ) : (
             <Card className="p-5 text-center flex flex-col items-center justify-center">
-              <Calendar className="text-muted mb-2 opacity-50" size={32} />
+              <Calendar className="text-muted-foreground mb-2 opacity-50" size={32} />
               <h3 className="font-medium text-foreground mb-1">Your schedule is clear</h3>
-              <p className="text-sm text-muted mb-4">Enjoy your free time!</p>
+              <p className="text-sm text-muted-foreground mb-4">Enjoy your free time!</p>
               <Button variant="secondary" onClick={() => navigate('/planner')} className="px-6 py-2 text-sm">
                 Open Planner
               </Button>

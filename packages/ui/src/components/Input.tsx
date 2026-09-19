@@ -10,7 +10,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative flex items-center">
         {Icon && (
-          <div className="absolute left-3 text-muted">
+          <div className="absolute left-3 text-muted-foreground">
             <Icon size={18} />
           </div>
         )}

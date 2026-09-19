@@ -29,16 +29,21 @@ export function DocumentVaultScreen() {
   const handleSave = async () => {
     if (!title.trim() || !previewImage) return;
 
-    await db.documents.put({
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      imageData: previewImage,
-      createdAt: new Date().toISOString()
-    });
+    try {
+      const safeId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2);
+      await db.documents.put({
+        id: safeId,
+        title: title.trim(),
+        imageData: previewImage,
+        createdAt: new Date().toISOString()
+      });
 
-    setTitle('');
-    setPreviewImage(null);
-    hapticImpact('light');
+      setTitle('');
+      setPreviewImage(null);
+      hapticImpact('light');
+    } catch (e: any) {
+      alert("Failed to save document: " + e.message);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -129,7 +134,7 @@ export function DocumentVaultScreen() {
           </div>
         ) : documents.length === 0 ? (
           <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-            <p className="text-sm text-muted">No documents saved yet.</p>
+            <p className="text-sm text-muted-foreground">No documents saved yet.</p>
           </div>
         ) : (
           documents.map(doc => (
