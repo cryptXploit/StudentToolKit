@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, exportVaultData, importVaultData } from '@student-os/storage';
+import { db } from '@student-os/storage';
+import { generateEcosystemBackup, restoreEcosystemBackup } from '../../lib/backup';
 import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield } from 'lucide-react';
 import { Button, Card, Input, Label } from '@student-os/ui';
+import { hapticImpact } from '../../lib/haptics';
 
 export function ProfileScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -46,16 +48,8 @@ export function ProfileScreen() {
 
   const handleExport = async () => {
     try {
-      const data = await exportVaultData();
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `student-os-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      hapticImpact('light');
+      await generateEcosystemBackup();
     } catch (e) {
       alert('Failed to export data.');
     }
@@ -65,14 +59,20 @@ export function ProfileScreen() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!window.confirm('WARNING: This will permanently overwrite all your current data. Are you sure?')) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        await importVaultData(event.target?.result as string);
-        alert('Data restored successfully!');
+        await restoreEcosystemBackup(event.target?.result as string);
+        hapticImpact('medium');
+        alert('Ecosystem restored successfully! Please restart the app or navigate to Home.');
         window.location.reload(); // Force reload to re-mount live queries
       } catch (err) {
-        alert('Failed to restore data. Invalid file format.');
+        alert('Failed to restore data. Invalid backup file.');
       }
     };
     reader.readAsText(file);
