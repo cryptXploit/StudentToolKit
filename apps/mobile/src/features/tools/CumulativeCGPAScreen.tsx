@@ -1,12 +1,17 @@
 import { useState, useMemo } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@student-os/storage';
 import { calculateCumulativeCGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Share2, Save } from 'lucide-react';
 import { Card, Input, Button } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { shareContent } from '../../lib/share';
 
 export function CumulativeCGPAScreen() {
+  const profile = useLiveQuery(() => db.profile.get('me'));
+  const [isSaved, setIsSaved] = useState(false);
+
   const [semesters, setSemesters] = useState([
     { id: crypto.randomUUID(), name: '', credit: '', gpa: '' },
     { id: crypto.randomUUID(), name: '', credit: '', gpa: '' },
@@ -28,6 +33,8 @@ export function CumulativeCGPAScreen() {
       return { credit: s.cred, gpa: s.gpa };
     });
 
+    setIsSaved(false); // Reset saved state when inputs change
+
     try {
       const calcCGPA = calculateCumulativeCGPA(records);
       return { cgpa: calcCGPA, totalCredits: validCredits };
@@ -35,6 +42,24 @@ export function CumulativeCGPAScreen() {
       return { cgpa: 0, totalCredits: validCredits };
     }
   }, [semesters]);
+
+  const handleSave = async () => {
+    hapticImpact('light');
+    const updatedProfile = profile ? { ...profile } : { 
+      id: 'me', 
+      maxGradingScale: 4.0, 
+      updatedAt: Date.now() 
+    };
+    
+    await db.profile.put({
+      ...updatedProfile,
+      currentCGPA: cgpa,
+      totalCredits: totalCredits,
+      updatedAt: Date.now()
+    });
+    
+    setIsSaved(true);
+  };
 
   const addSemester = () => {
     hapticImpact('light');
@@ -76,16 +101,25 @@ export function CumulativeCGPAScreen() {
           </div>
         </div>
         {cgpa > 0 && (
-          <Button 
-            variant="secondary" 
-            className="w-full bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
-            onClick={() => shareContent(
-              'Cumulative CGPA Result', 
-              `🎓 My current Cumulative CGPA is ${cgpa.toFixed(2)} across ${totalCredits} credits! Calculated instantly on Student OS.`
-            )}
-          >
-            <Share2 className="mr-2" size={16} /> Share Result
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="secondary" 
+              className={`flex-1 ${isSaved ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'}`}
+              onClick={handleSave}
+            >
+              <Save className="mr-2" size={16} /> {isSaved ? 'Saved! ✅' : 'Save to Profile'}
+            </Button>
+            <Button 
+              variant="secondary" 
+              className="flex-1 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+              onClick={() => shareContent(
+                'Cumulative CGPA Result', 
+                `🎓 My current Cumulative CGPA is ${cgpa.toFixed(2)} across ${totalCredits} credits! Calculated instantly on Student OS.`
+              )}
+            >
+              <Share2 className="mr-2" size={16} /> Share
+            </Button>
+          </div>
         )}
       </Card>
 

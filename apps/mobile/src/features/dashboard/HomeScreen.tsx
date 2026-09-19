@@ -80,6 +80,15 @@ export function HomeScreen() {
             </div>
             
             <div className="grid grid-cols-2 gap-4">
+              {profile.currentCGPA !== undefined && (
+                <div>
+                  <p className="text-xs font-medium text-muted mb-1">Current CGPA</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {profile.currentCGPA.toFixed(2)}
+                    <span className="text-sm font-normal text-muted ml-1">({profile.totalCredits} Cr)</span>
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-medium text-muted mb-1">Target CGPA</p>
                 <p className="text-2xl font-bold text-foreground">

@@ -15,10 +15,12 @@ export function TargetGPAScreen() {
   const [targetCGPA, setTargetCGPA] = useState('');
   const [remainingCredits, setRemainingCredits] = useState('');
 
-  // Pre-fill target CGPA if it exists in profile
+  // Pre-fill fields from profile if they exist
   useEffect(() => {
-    if (profile?.targetCGPA && !targetCGPA) {
-      setTargetCGPA(profile.targetCGPA.toString());
+    if (profile) {
+      if (profile.targetCGPA && !targetCGPA) setTargetCGPA(profile.targetCGPA.toString());
+      if (profile.currentCGPA && !currentCGPA) setCurrentCGPA(profile.currentCGPA.toString());
+      if (profile.totalCredits && !currentCredits) setCurrentCredits(profile.totalCredits.toString());
     }
   }, [profile]);
 

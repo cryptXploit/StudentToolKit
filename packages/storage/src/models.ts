@@ -4,6 +4,8 @@ export interface StudentProfile {
   department?: string;
   maxGradingScale: number; // e.g., 4.0 or 5.0
   targetCGPA?: number;
+  currentCGPA?: number;
+  totalCredits?: number;
   updatedAt: number;
 }
 
