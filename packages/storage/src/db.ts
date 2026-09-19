@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import type { StudentProfile, Semester, Course, RoutineSlot, AttendanceLog, AcademicEvent } from './models';
+import type { StudentProfile, Semester, Course, RoutineSlot, AttendanceLog, AcademicEvent, StudentDocument } from './models';
 
 export class StudentDatabase extends Dexie {
   profile!: Table<StudentProfile, string>;
@@ -8,6 +8,7 @@ export class StudentDatabase extends Dexie {
   routine!: Table<RoutineSlot, string>;
   attendance!: Table<AttendanceLog, string>;
   events!: Table<AcademicEvent, string>;
+  documents!: Table<StudentDocument, string>;
 
   constructor() {
     super('StudentUtilityOSDB');
@@ -45,6 +46,17 @@ export class StudentDatabase extends Dexie {
       courses: 'id, semesterId',
       routine: 'id, courseId, dayOfWeek', // Index courseId and dayOfWeek for fast daily queries
       attendance: 'id, courseId, date, [courseId+date]' // Compound index for fast checking if a class was logged today
+    });
+
+    // V5 Schema - Document Vault
+    this.version(5).stores({
+      profile: 'id',
+      events: 'id, date, isCompleted',
+      semesters: 'id',
+      courses: 'id, semesterId',
+      routine: 'id, courseId, dayOfWeek',
+      attendance: 'id, courseId, date, [courseId+date]',
+      documents: 'id, createdAt' // Sortable by date added
     });
   }
 }

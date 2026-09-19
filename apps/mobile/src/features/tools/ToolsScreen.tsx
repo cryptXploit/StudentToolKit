@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, FolderLock } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
@@ -41,6 +41,15 @@ export function ToolsScreen() {
       path: '/tools/attendance',
       color: 'text-emerald-500',
       bg: 'bg-emerald-50 dark:bg-emerald-950/30'
+    },
+    {
+      id: 'vault',
+      title: 'Document Vault',
+      description: 'Secure, offline storage for IDs and admit cards.',
+      icon: FolderLock,
+      path: '/tools/vault',
+      color: 'text-amber-500',
+      bg: 'bg-amber-50 dark:bg-amber-950/30'
     }
   ];
 

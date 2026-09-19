@@ -58,3 +58,10 @@ export interface AcademicEvent {
   isCompleted: boolean;
   createdAt: number;
 }
+
+export interface StudentDocument {
+  id: string;
+  title: string; // e.g., "University ID Card"
+  imageData: string; // Base64 string of the image
+  createdAt: string;
+}
