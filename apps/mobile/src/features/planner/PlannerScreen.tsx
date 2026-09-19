@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
-import { Calendar, Plus, Clock, CheckCircle2, Circle } from 'lucide-react';
-import { scheduleEventReminder } from '../../lib/notifications';
+import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { scheduleEventReminder, cancelEventReminder } from '../../lib/notifications';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
@@ -44,7 +44,22 @@ export function PlannerScreen() {
     if (Capacitor.isNativePlatform()) {
       Haptics.impact({ style: currentStatus ? ImpactStyle.Light : ImpactStyle.Medium }).catch(() => {});
     }
+    
+    if (!currentStatus) {
+      // Event is being marked as completed, cancel the notification
+      await cancelEventReminder(id);
+    }
+    
     await db.events.update(id, { isCompleted: !currentStatus });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    }
+    
+    await cancelEventReminder(id);
+    await db.events.delete(id);
   };
 
   return (
@@ -114,13 +129,18 @@ export function PlannerScreen() {
                   <h3 className="font-semibold text-foreground leading-tight">{event.title}</h3>
                   <p className="text-xs text-muted mt-1 uppercase tracking-wider">{event.type}</p>
                 </div>
-                <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-slate-400' : 'text-primary font-medium'}`}>
-                  <div className="flex items-center justify-end">
-                    <Clock className="mr-1" size={14} />
-                    <span>
-                      {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : daysLeft < 0 ? 'Overdue' : `${daysLeft} days`}
-                    </span>
+                <div className="flex flex-col items-end justify-center">
+                  <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-slate-400' : 'text-primary font-medium'}`}>
+                    <div className="flex items-center justify-end">
+                      <Clock className="mr-1" size={14} />
+                      <span>
+                        {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : daysLeft < 0 ? 'Overdue' : `${daysLeft} days`}
+                      </span>
+                    </div>
                   </div>
+                  <button onClick={() => handleDelete(event.id)} className="mt-2 text-slate-300 hover:text-red-500 transition-colors" title="Delete Event">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             );

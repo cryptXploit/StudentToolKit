@@ -52,3 +52,20 @@ export async function scheduleEventReminder(eventId: string, title: string, even
     ]
   });
 }
+
+export async function cancelEventReminder(eventId: string) {
+  if (!Capacitor.isNativePlatform()) return;
+  
+  let numericId = 0;
+  for (let i = 0; i < eventId.length; i++) {
+    numericId = (numericId << 5) - numericId + eventId.charCodeAt(i);
+    numericId |= 0;
+  }
+  numericId = Math.abs(numericId);
+
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: numericId }] });
+  } catch (e) {
+    console.error('Failed to cancel event reminder', e);
+  }
+}
