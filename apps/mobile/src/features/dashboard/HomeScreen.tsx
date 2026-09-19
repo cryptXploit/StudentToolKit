@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
 import { calculateDaysRemaining, calculateAttendanceStatus } from '@student-os/engine';
 import { hapticImpact } from '../../lib/haptics';
@@ -17,30 +17,111 @@ function formatTime(time24: string) {
   return `${h12}:${minutes} ${ampm}`;
 }
 
+interface AttentionItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  severity: 'critical' | 'warning';
+  type: 'attendance' | 'exam' | 'assignment';
+}
+
 export function HomeScreen() {
   const navigate = useNavigate();
   const profile = useLiveQuery(() => db.profile.get('me'));
   const today = new Date().toLocaleDateString('en-CA');
   
-  const nextEventData = useLiveQuery(async () => {
+  const dashboardData = useLiveQuery(async () => {
     const profileContext = await db.profile.get('me');
     const activeSemesterId = profileContext?.activeSemesterId;
     
     let events = await db.events.toArray();
     const allCourses = await db.courses.toArray();
+    const allAttendance = await db.attendance.toArray();
     
+    let activeCourses = allCourses;
     if (activeSemesterId) {
-      const activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
+      activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
       events = events.filter(e => !e.courseId || activeCourses.some(c => c.id === e.courseId));
     }
     
-    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const nextEvent = events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
+    const attentionItems: AttentionItem[] = [];
     
-    if (!nextEvent) return null;
+    // Rule 1: Attendance Risk
+    const targetPercentage = profileContext?.targetAttendancePercentage || 75;
+    for (const course of activeCourses) {
+      const courseLogs = allAttendance.filter(l => l.courseId === course.id);
+      let attended = 0;
+      let total = 0;
+      for (const log of courseLogs) {
+        if (log.status === 'present' || log.status === 'late') { attended++; total++; }
+        else if (log.status === 'absent') { total++; }
+      }
+      if (total > 0) {
+        try {
+          const stats = calculateAttendanceStatus({ attended, total, targetPercentage });
+          if (stats.requiredClasses > 0) {
+            attentionItems.push({
+              id: `att-${course.id}`,
+              title: `Attendance Risk: ${course.name}`,
+              subtitle: `Current: ${stats.currentPercentage}%. Need to attend next ${stats.requiredClasses} ${stats.requiredClasses === 1 ? 'class' : 'classes'}.`,
+              severity: 'critical',
+              type: 'attendance'
+            });
+          }
+        } catch (e) {}
+      }
+    }
     
-    const eventCourse = allCourses.find(c => c.id === nextEvent.courseId);
-    return { event: nextEvent, course: eventCourse };
+    // Process Events
+    const incompleteEvents = events.filter(e => !e.isCompleted);
+    incompleteEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const upcomingEvents = [];
+    
+    for (const e of incompleteEvents) {
+      const daysLeft = calculateDaysRemaining(e.date);
+      if (daysLeft >= -1) {
+        upcomingEvents.push({
+          event: e,
+          course: allCourses.find(c => c.id === e.courseId)
+        });
+      }
+      
+      const courseName = allCourses.find(c => c.id === e.courseId)?.name || 'General';
+      
+      // Rule 2: Exams
+      if (e.type === 'exam' && daysLeft >= 0 && daysLeft <= 4) {
+        attentionItems.push({
+          id: `exam-${e.id}`,
+          title: `Upcoming Exam: ${courseName}`,
+          subtitle: `${e.title} in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`,
+          severity: 'critical',
+          type: 'exam'
+        });
+      }
+      
+      // Rule 3: Assignments
+      if (e.type === 'assignment' && daysLeft >= 0 && daysLeft <= 1) {
+        attentionItems.push({
+          id: `assig-${e.id}`,
+          title: `Due Soon: ${courseName}`,
+          subtitle: `${e.title} is due ${daysLeft === 0 ? 'today' : 'tomorrow'}`,
+          severity: 'warning',
+          type: 'assignment'
+        });
+      }
+    }
+    
+    attentionItems.sort((a, b) => {
+      if (a.severity === 'critical' && b.severity !== 'critical') return -1;
+      if (b.severity === 'critical' && a.severity !== 'critical') return 1;
+      return 0;
+    });
+    
+    return {
+      attentionItems: attentionItems.slice(0, 3),
+      upcomingEvents: upcomingEvents.slice(0, 3)
+    };
   });
 
   const todaysClasses = useLiveQuery(async () => {
@@ -232,6 +313,33 @@ export function HomeScreen() {
         </div>
       </section>
       
+      {dashboardData && dashboardData.attentionItems.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Attention</h2>
+          <div className="space-y-3">
+            {dashboardData.attentionItems.map(item => (
+              <Card key={item.id} className={`p-4 border-l-4 ${item.severity === 'critical' ? 'border-l-red-500 bg-red-50 dark:bg-red-950/20' : 'border-l-amber-500 bg-amber-50 dark:bg-amber-950/20'}`}>
+                <div className="flex items-start">
+                  {item.severity === 'critical' ? (
+                    <AlertCircle className="text-red-500 mr-3 shrink-0 mt-0.5" size={18} />
+                  ) : (
+                    <Clock className="text-amber-500 mr-3 shrink-0 mt-0.5" size={18} />
+                  )}
+                  <div>
+                    <h3 className={`font-semibold leading-tight mb-1 text-sm ${item.severity === 'critical' ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                      {item.title}
+                    </h3>
+                    <p className={`text-xs ${item.severity === 'critical' ? 'text-red-600/80 dark:text-red-400/80' : 'text-amber-600/80 dark:text-amber-400/80'}`}>
+                      {item.subtitle}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+      
       {/* Today's Classes Section */}
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Today's Classes</h2>
@@ -335,37 +443,39 @@ export function HomeScreen() {
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Up Next</h2>
         
-        {nextEventData !== undefined ? (
-          nextEventData ? (
-            <Link to="/planner" className="block active:scale-[0.98] transition-transform">
-              <Card className="flex items-center justify-between p-4 border-l-4 border-l-primary">
-                <div>
-                  <h3 className="font-semibold text-foreground leading-tight">{nextEventData.event.title}</h3>
-                  <div className="flex items-center text-xs text-muted-foreground mt-1 gap-2">
-                    <span className="uppercase tracking-wider font-medium">{nextEventData.event.type}</span>
-                    {nextEventData.course && (
-                      <span className="text-blue-600 dark:text-blue-400 font-bold">
-                        • {nextEventData.course.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  {(() => {
-                    const daysLeft = calculateDaysRemaining(nextEventData.event.date);
-                    const isUrgent = daysLeft >= 0 && daysLeft <= 3;
-                    return (
-                      <div className={`flex items-center justify-end ${isUrgent ? 'text-red-500 font-bold' : 'text-primary font-medium'}`}>
-                        <Clock className="mr-1" size={14} />
-                        <span>
-                          {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
-                        </span>
+        {dashboardData !== undefined ? (
+          dashboardData.upcomingEvents.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.upcomingEvents.map((data: any) => {
+                const daysLeft = calculateDaysRemaining(data.event.date);
+                const isUrgent = daysLeft >= 0 && daysLeft <= 3;
+                return (
+                  <Link key={data.event.id} to="/planner" className="block active:scale-[0.98] transition-transform">
+                    <Card className="flex items-center justify-between p-4 border-l-4 border-l-slate-200 dark:border-l-slate-700">
+                      <div>
+                        <h3 className="font-semibold text-foreground leading-tight">{data.event.title}</h3>
+                        <div className="flex items-center text-xs text-muted-foreground mt-1 gap-2">
+                          <span className="uppercase tracking-wider font-medium">{data.event.type}</span>
+                          {data.course && (
+                            <span className="text-blue-600 dark:text-blue-400 font-bold">
+                              • {data.course.name}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })()}
-                </div>
-              </Card>
-            </Link>
+                      <div className="text-right">
+                        <div className={`flex items-center justify-end ${isUrgent ? 'text-red-500 font-bold' : 'text-primary font-medium'}`}>
+                          <Clock className="mr-1" size={14} />
+                          <span>
+                            {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
           ) : (
             <Card className="p-5 text-center flex flex-col items-center justify-center">
               <Calendar className="text-muted-foreground mb-2 opacity-50" size={32} />
