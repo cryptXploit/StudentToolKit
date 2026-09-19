@@ -41,7 +41,9 @@ export function CourseDetailScreen() {
   const attendanceLogs = useLiveQuery(async () => {
     try {
       if (!db || !courseId) return [];
-      return await db.attendance.where({ courseId }).reverse().sortBy('date');
+      const data = await db.attendance.where({ courseId }).toArray();
+      // Sort natively in JS to avoid Dexie index dependencies
+      return data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
       console.error("Dexie Query Failed:", e);
       return [];

@@ -19,7 +19,9 @@ export function TranscriptScreen() {
   const fetchSemesters = async () => {
     try {
       if (!db || typeof db.semesters === 'undefined') return;
-      const data = await db.semesters.orderBy('createdAt').toArray();
+      const data = await db.semesters.toArray();
+      // Sort natively in JS to avoid Dexie index SchemaErrors
+      data.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setSemesters(data);
     } catch (error) {
       console.error("Dexie Fetch Error:", error);
