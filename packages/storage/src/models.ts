@@ -29,13 +29,25 @@ export interface Course {
   updatedAt: string;
 }
 
-export interface AttendanceRecord {
-  id: string; // UUID
-  courseId: string; // Foreign key to Course
-  attendedClasses: number;
-  totalClasses: number;
-  targetPercentage: number;
-  updatedAt: number;
+export interface RoutineSlot {
+  id: string;
+  courseId: string; // Relational link to Course
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime: string; // "HH:mm" 24-hour format (e.g., "09:30")
+  endTime: string; // "HH:mm" 24-hour format (e.g., "11:00")
+  roomNumber?: string;
+  type?: string; // "Lecture", "Lab", "Tutorial"
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendanceLog {
+  id: string;
+  courseId: string; // Relational link to Course
+  date: string; // "YYYY-MM-DD" local date string
+  status: 'present' | 'absent' | 'late' | 'excused';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AcademicEvent {

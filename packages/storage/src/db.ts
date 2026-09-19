@@ -1,11 +1,12 @@
 import Dexie, { Table } from 'dexie';
-import type { StudentProfile, Semester, Course, AttendanceRecord, AcademicEvent } from './models';
+import type { StudentProfile, Semester, Course, RoutineSlot, AttendanceLog, AcademicEvent } from './models';
 
 export class StudentDatabase extends Dexie {
   profile!: Table<StudentProfile, string>;
   semesters!: Table<Semester, string>;
   courses!: Table<Course, string>;
-  attendance!: Table<AttendanceRecord, string>;
+  routine!: Table<RoutineSlot, string>;
+  attendance!: Table<AttendanceLog, string>;
   events!: Table<AcademicEvent, string>;
 
   constructor() {
@@ -34,6 +35,16 @@ export class StudentDatabase extends Dexie {
       events: 'id, date, isCompleted',
       semesters: 'id',
       courses: 'id, semesterId' // Index semesterId for fast relational queries
+    });
+
+    // V4 Schema - Routine and Attendance Schema
+    this.version(4).stores({
+      profile: 'id',
+      events: 'id, date, isCompleted',
+      semesters: 'id',
+      courses: 'id, semesterId',
+      routine: 'id, courseId, dayOfWeek', // Index courseId and dayOfWeek for fast daily queries
+      attendance: 'id, courseId, date, [courseId+date]' // Compound index for fast checking if a class was logged today
     });
   }
 }
