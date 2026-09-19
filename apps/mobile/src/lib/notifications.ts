@@ -69,3 +69,59 @@ export async function cancelEventReminder(eventId: string) {
     console.error('Failed to cancel event reminder', e);
   }
 }
+
+export async function scheduleRoutineReminder(slot: any, courseName: string) {
+  if (!Capacitor.isNativePlatform()) return;
+
+  const hasPermission = await requestNotificationPermission();
+  if (!hasPermission) return;
+
+  try {
+    const [hoursStr, minutesStr] = slot.startTime.split(':');
+    const d = new Date();
+    d.setHours(parseInt(hoursStr, 10), parseInt(minutesStr, 10), 0, 0);
+    d.setMinutes(d.getMinutes() - 15);
+    
+    const triggerHour = d.getHours();
+    const triggerMinute = d.getMinutes();
+    const triggerWeekday = slot.dayOfWeek + 1;
+
+    let numericId = 0;
+    for (let i = 0; i < slot.id.length; i++) {
+      numericId = (numericId << 5) - numericId + slot.id.charCodeAt(i);
+      numericId |= 0;
+    }
+    numericId = Math.abs(numericId);
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: "Class in 15 mins",
+          body: `${courseName} is starting. Room: ${slot.roomNumber || 'TBA'}`,
+          id: numericId,
+          schedule: { on: { weekday: triggerWeekday, hour: triggerHour, minute: triggerMinute } },
+          extra: { slotId: slot.id }
+        }
+      ]
+    });
+  } catch (e) {
+    console.error('Failed to schedule routine reminder', e);
+  }
+}
+
+export async function cancelRoutineReminder(slotId: string) {
+  if (!Capacitor.isNativePlatform()) return;
+
+  let numericId = 0;
+  for (let i = 0; i < slotId.length; i++) {
+    numericId = (numericId << 5) - numericId + slotId.charCodeAt(i);
+    numericId |= 0;
+  }
+  numericId = Math.abs(numericId);
+
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: numericId }] });
+  } catch (e) {
+    console.error('Failed to cancel routine reminder', e);
+  }
+}

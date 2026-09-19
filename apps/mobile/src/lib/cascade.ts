@@ -1,5 +1,6 @@
 import { db } from '@student-os/storage';
 import { deleteFileFromDisk } from './filesystem';
+import { cancelRoutineReminder } from './notifications';
 
 /**
  * Safely deletes a Course and eagerly purges all associated
@@ -24,7 +25,11 @@ export async function deleteCourseCascade(courseId: string) {
   // Step 4: Delete attendance rows
   await db.attendance.where({ courseId }).delete();
   
-  // Step 5: Delete routine rows
+  // Step 5: Fetch routine slots to cancel alarms, then delete rows
+  const slots = await db.routine.where({ courseId }).toArray();
+  for (const slot of slots) {
+    await cancelRoutineReminder(slot.id);
+  }
   await db.routine.where({ courseId }).delete();
   
   // Step 6: Delete the course itself

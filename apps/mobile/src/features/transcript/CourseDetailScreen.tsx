@@ -7,6 +7,7 @@ import { Card, Input, Button, Label } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
+import { scheduleRoutineReminder, cancelRoutineReminder } from '../../lib/notifications';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -168,7 +169,7 @@ export function CourseDetailScreen() {
 
     try {
       const safeId = generateSafeId();
-      await db.routine.put({
+      const newSlot = {
         id: safeId,
         courseId,
         dayOfWeek: parseInt(dayOfWeek, 10),
@@ -177,7 +178,10 @@ export function CourseDetailScreen() {
         roomNumber: roomNumber.trim(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      });
+      };
+      
+      await db.routine.put(newSlot);
+      await scheduleRoutineReminder(newSlot, course?.name || 'Your class');
 
       setRoomNumber('');
       hapticImpact('light');
@@ -189,6 +193,7 @@ export function CourseDetailScreen() {
 
   const handleDeleteRoutine = async (id: string) => {
     hapticImpact('medium');
+    await cancelRoutineReminder(id);
     await db.routine.delete(id);
   };
 
