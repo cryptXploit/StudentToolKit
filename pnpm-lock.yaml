@@ -44,6 +44,9 @@ importers:
       '@student-os/storage':
         specifier: workspace:*
         version: link:../../packages/storage
+      '@student-os/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       dexie-react-hooks:
         specifier: ^1.1.7
         version: 1.1.7(@types/react@18.3.31)(dexie@3.2.7)(react@18.3.1)
@@ -165,7 +168,30 @@ importers:
 
   packages/tsconfig: {}
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      lucide-react:
+        specifier: ^0.363.0
+        version: 0.363.0(react@18.3.1)
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@student-os/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^18.2.66
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.2.22
+        version: 18.3.7(@types/react@18.3.31)
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
 
 packages:
 

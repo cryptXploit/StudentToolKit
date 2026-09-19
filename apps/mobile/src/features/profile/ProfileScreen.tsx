@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, exportVaultData, importVaultData } from '@student-os/storage';
 import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield } from 'lucide-react';
+import { Button, Card, Input, Label } from '@student-os/ui';
 
 export function ProfileScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -83,70 +84,67 @@ export function ProfileScreen() {
 
       <div className="space-y-4">
         {/* Basic Info */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-4">
+        <Card className="p-4 space-y-4">
           <div>
-            <label className="flex items-center text-sm font-medium text-foreground mb-1.5">
+            <Label>
               <GraduationCap className="mr-2 text-primary" size={16} />
               University Name
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
-              className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
               placeholder="e.g. Rajshahi University"
               value={universityName}
               onChange={(e) => setUniversityName(e.target.value)}
             />
           </div>
           <div>
-            <label className="flex items-center text-sm font-medium text-foreground mb-1.5">
+            <Label>
               <BookOpen className="mr-2 text-primary" size={16} />
               Department
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
-              className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
               placeholder="e.g. ICE"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             />
           </div>
-        </div>
+        </Card>
 
         {/* Grading Scale */}
-        <div className="bg-card border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-4">
+        <Card className="p-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center text-sm font-medium text-foreground mb-1.5">
+              <Label>
                 <Hash className="mr-2 text-primary" size={16} />
                 Max Scale
-              </label>
-              <input
+              </Label>
+              <Input
                 type="number" step="0.01" min="1.0" max="10.0"
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
                 value={maxScale} onChange={(e) => setMaxScale(e.target.value)}
               />
             </div>
             <div>
-              <label className="flex items-center text-sm font-medium text-foreground mb-1.5">
+              <Label>
                 <Target className="mr-2 text-primary" size={16} />
                 Target CGPA
-              </label>
-              <input
+              </Label>
+              <Input
                 type="number" step="0.01" min="1.0" max="10.0"
-                className="w-full bg-background border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
                 placeholder="e.g. 3.50" value={targetCGPA} onChange={(e) => setTargetCGPA(e.target.value)}
               />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
-      <button
+      <Button
         onClick={handleSave}
-        className="mt-6 w-full bg-primary text-white font-medium rounded-xl py-3 flex items-center justify-center active:scale-[0.98] transition-transform"
+        variant="primary"
+        className="mt-6 w-full py-3"
       >
         {isSaved ? <><Check className="mr-2" size={20} />Saved Locally</> : 'Save Profile'}
-      </button>
+      </Button>
 
       {/* Data Vault Section */}
       <section className="mt-10 mb-8 border-t border-slate-200 dark:border-slate-800 pt-8">
@@ -159,17 +157,17 @@ export function ProfileScreen() {
         </p>
         
         <div className="flex gap-3">
-          <button onClick={handleExport} className="flex-1 flex items-center justify-center bg-card border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 text-sm font-medium text-foreground active:scale-95 transition-transform">
+          <Button onClick={handleExport} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Download className="mr-2 text-primary" size={16} />
             Export
-          </button>
+          </Button>
           
           <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
           
-          <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center bg-card border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 text-sm font-medium text-foreground active:scale-95 transition-transform">
+          <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Upload className="mr-2 text-primary" size={16} />
             Restore
-          </button>
+          </Button>
         </div>
       </section>
     </div>
