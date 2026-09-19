@@ -23,6 +23,16 @@ export class StudentDatabase extends Dexie {
       documents: 'id, createdAt'
     });
 
+    this.version(2).stores({
+      documents: 'id, courseId, createdAt'
+    }).upgrade(tx => {
+      return tx.table('documents').toCollection().modify(doc => {
+        if (!doc.mimeType) doc.mimeType = 'image/jpeg';
+        if (!doc.courseId) doc.courseId = 'unassigned';
+        if (!doc.fileData && doc.imageData) doc.fileData = doc.imageData;
+      });
+    });
+
     this.profile = this.table('profile');
     this.semesters = this.table('semesters');
     this.courses = this.table('courses');

@@ -61,7 +61,11 @@ export interface AcademicEvent {
 
 export interface StudentDocument {
   id: string;
-  title: string; // e.g., "University ID Card"
-  imageData: string; // Base64 string of the image
+  courseId?: string; // Optional for legacy unassigned docs
+  title: string; 
+  imageData?: string; // Legacy support
+  fileData?: string; // Base64 string of the file
+  mimeType?: string; // e.g., "application/pdf", "image/jpeg"
+  size?: number; // bytes
   createdAt: string;
 }
