@@ -23,25 +23,40 @@ export function HomeScreen() {
   const today = new Date().toLocaleDateString('en-CA');
   
   const nextEventData = useLiveQuery(async () => {
-    const events = await db.events.toArray();
+    const profileContext = await db.profile.get('me');
+    const activeSemesterId = profileContext?.activeSemesterId;
+    
+    let events = await db.events.toArray();
+    const allCourses = await db.courses.toArray();
+    
+    if (activeSemesterId) {
+      const activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
+      events = events.filter(e => !e.courseId || activeCourses.some(c => c.id === e.courseId));
+    }
+    
     events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const nextEvent = events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
     
     if (!nextEvent) return null;
     
-    const allCourses = await db.courses.toArray();
     const eventCourse = allCourses.find(c => c.id === nextEvent.courseId);
-    
     return { event: nextEvent, course: eventCourse };
   });
 
   const todaysClasses = useLiveQuery(async () => {
+    const profileContext = await db.profile.get('me');
+    const activeSemesterId = profileContext?.activeSemesterId;
+    
     const todayDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday...
     
-    // Fetch all required data in bulk
-    const slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
+    let slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
     const allCourses = await db.courses.toArray();
     const todaysLogs = await db.attendance.where({ date: today }).toArray();
+    
+    if (activeSemesterId) {
+      const activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
+      slots = slots.filter(slot => activeCourses.some(c => c.id === slot.courseId));
+    }
     
     // Sort chronologically by start time (string comparison works for HH:mm)
     slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -207,6 +222,14 @@ export function HomeScreen() {
           <div className="flex justify-center p-4">
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
           </div>
+        ) : !profile?.activeSemesterId ? (
+          <Card className="p-5 text-center flex flex-col items-center justify-center">
+            <GraduationCap className="text-muted-foreground mb-2 opacity-50" size={32} />
+            <p className="text-sm text-muted-foreground mb-4">No active semester selected.</p>
+            <Button variant="secondary" onClick={() => navigate('/transcript')} className="px-6 py-2 text-sm">
+              Head to Memory to set one up
+            </Button>
+          </Card>
         ) : todaysClasses.length === 0 ? (
           <Card className="p-5 text-center flex flex-col items-center justify-center">
             <Calendar className="text-muted-foreground mb-2 opacity-50" size={32} />

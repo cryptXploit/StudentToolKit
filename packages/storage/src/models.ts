@@ -6,6 +6,7 @@ export interface StudentProfile {
   targetCGPA?: number;
   currentCGPA?: number;
   totalCredits?: number;
+  activeSemesterId?: string; // Pointer to current active semester
   updatedAt: number;
 }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 import { db } from '@student-os/storage';
 import { BookOpen, Plus, Trash2, ChevronRight } from 'lucide-react';
@@ -16,6 +17,8 @@ export function TranscriptScreen() {
   const [newSemesterName, setNewSemesterName] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [semesters, setSemesters] = useState<any[] | undefined>(undefined);
+  
+  const profile = useLiveQuery(() => db.profile.get('me'));
 
   const fetchSemesters = async () => {
     try {
@@ -34,6 +37,22 @@ export function TranscriptScreen() {
     fetchSemesters();
   }, []);
 
+  const handleSetActive = async (id: string, e?: any) => {
+    if (e && e.preventDefault) e.preventDefault();
+    e?.stopPropagation();
+    try {
+      const existingProfile = await db.profile.get('me');
+      await db.profile.put({
+        ...(existingProfile || { id: 'me', maxGradingScale: 4.0, updatedAt: Date.now() }),
+        activeSemesterId: id,
+        updatedAt: Date.now()
+      });
+      hapticImpact('light');
+    } catch (err) {
+      console.error("Failed to set active semester:", err);
+    }
+  };
+
   const handleAddSemester = async (e?: any) => {
     if (e && e.preventDefault) e.preventDefault();
     setSaveError(null);
@@ -46,8 +65,9 @@ export function TranscriptScreen() {
     }
     
     try {
+      const safeId = generateSafeId();
       const putPromise = db.semesters.put({
-        id: generateSafeId(),
+        id: safeId,
         name: nameToSave,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -58,6 +78,12 @@ export function TranscriptScreen() {
       );
       
       await Promise.race([putPromise, timeoutPromise]);
+      
+      // Auto-fallback for first semester
+      if (semesters?.length === 0) {
+        await handleSetActive(safeId);
+      }
+      
       setNewSemesterName('');
       hapticImpact('light');
       
@@ -73,6 +99,22 @@ export function TranscriptScreen() {
     await deleteSemesterCascade(id);
     await syncTranscriptToProfile();
     await fetchSemesters();
+    
+    // Auto-clear active semester if it was deleted
+    if (profile?.activeSemesterId === id) {
+      try {
+        const existingProfile = await db.profile.get('me');
+        if (existingProfile) {
+          await db.profile.put({
+            ...existingProfile,
+            activeSemesterId: undefined,
+            updatedAt: Date.now()
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
   return (
@@ -113,21 +155,30 @@ export function TranscriptScreen() {
             <p className="text-sm text-muted-foreground">You haven't added any semesters yet. Build your academic memory by adding your first one above.</p>
           </Card>
         ) : (
-          semesters.map(semester => (
-            <Card key={semester.id} className="flex items-center justify-between p-1 overflow-hidden group">
+          semesters.map(semester => {
+            const isActive = profile?.activeSemesterId === semester.id;
+            return (
+            <Card key={semester.id} className={`flex items-center justify-between p-1 overflow-hidden group ${isActive ? 'border-primary border-l-4' : 'border-l-4 border-l-transparent'}`}>
               <Link to={`/transcript/${semester.id}`} className="flex-1 p-3 flex items-center justify-between active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors rounded-lg">
                 <span className="font-semibold text-foreground">{semester.name}</span>
                 <ChevronRight size={20} className="text-muted-foreground opacity-50" />
               </Link>
-              <Button 
-                variant="ghost" 
-                className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
-                onClick={() => handleDeleteSemester(semester.id)}
-              >
-                <Trash2 size={20} />
-              </Button>
+              <div className="flex items-center shrink-0 pr-1">
+                {isActive ? (
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider mr-2 px-2 py-1 bg-primary/10 rounded-md">Active</span>
+                ) : (
+                  <Button variant="ghost" className="text-xs font-medium text-muted-foreground px-2 h-8 mr-1" onClick={(e) => handleSetActive(semester.id, e)}>Set Active</Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  className="p-2 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
+                  onClick={() => handleDeleteSemester(semester.id)}
+                >
+                  <Trash2 size={20} />
+                </Button>
+              </div>
             </Card>
-          ))
+          )})
         )}
       </div>
     </div>
