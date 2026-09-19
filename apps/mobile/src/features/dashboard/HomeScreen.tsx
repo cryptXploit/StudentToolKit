@@ -2,9 +2,18 @@ import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar } from 'lucide-react';
+import { Calculator, CheckSquare, Target, GraduationCap, Clock, Calendar, MapPin } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
 import { calculateDaysRemaining } from '@student-os/engine';
+
+function formatTime(time24: string) {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':');
+  const h = parseInt(hours, 10);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${minutes} ${ampm}`;
+}
 
 export function HomeScreen() {
   const navigate = useNavigate();
@@ -14,6 +23,26 @@ export function HomeScreen() {
     return db.events.orderBy('date').toArray().then(events => 
       events.find(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1)
     );
+  });
+
+  const todaysClasses = useLiveQuery(async () => {
+    const todayDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday...
+    
+    // Fetch routine slots for today
+    const slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
+    
+    // Sort chronologically by start time (string comparison works for HH:mm)
+    slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    
+    // Join with courses table to get the course name
+    const classesWithCourses = await Promise.all(
+      slots.map(async (slot) => {
+        const course = await db.courses.get(slot.courseId);
+        return { ...slot, courseName: course?.name || 'Unknown Course' };
+      })
+    );
+    
+    return classesWithCourses;
   });
 
   const [greeting, setGreeting] = useState('Welcome');
@@ -121,6 +150,42 @@ export function HomeScreen() {
         </div>
       </section>
       
+      {/* Today's Classes Section */}
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Today's Classes</h2>
+        
+        {todaysClasses === undefined ? (
+          <div className="flex justify-center p-4">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : todaysClasses.length === 0 ? (
+          <Card className="p-5 text-center flex flex-col items-center justify-center">
+            <Calendar className="text-muted mb-2 opacity-50" size={32} />
+            <p className="text-sm text-muted">No classes today. Enjoy your free time!</p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {todaysClasses.map(slot => (
+              <Card key={slot.id} className="p-4 border-l-4 border-l-primary">
+                <h3 className="font-bold text-foreground text-lg mb-2">{slot.courseName}</h3>
+                <div className="flex flex-col gap-1.5 text-sm text-muted">
+                  <div className="flex items-center">
+                    <Clock size={14} className="mr-2 opacity-70" />
+                    <span>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+                  </div>
+                  {slot.roomNumber && (
+                    <div className="flex items-center">
+                      <MapPin size={14} className="mr-2 opacity-70" />
+                      <span>Room {slot.roomNumber}</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Up Next Section */}
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-3">Up Next</h2>
