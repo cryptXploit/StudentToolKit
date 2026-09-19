@@ -2,8 +2,22 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Student OS | Offline Academic Toolkit",
-  description: "Calculate CGPA, track attendance, and plan your semester. Download the offline-first app.",
+  metadataBase: new URL('https://prepia.app'),
+  title: 'Student OS | Less guessing. More clarity.',
+  description: 'The offline-first academic decision engine. Calculate your Target CGPA, manage attendance, and track deadlines instantly.',
+  openGraph: {
+    title: 'Student OS | Less guessing. More clarity.',
+    description: 'The offline-first academic decision engine.',
+    url: 'https://prepia.app',
+    siteName: 'Student OS',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Student OS | Academic Decision Engine',
+    description: 'Calculate your Target CGPA, manage attendance, and track deadlines instantly—without an internet connection.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

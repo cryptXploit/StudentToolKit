@@ -76,6 +76,9 @@ export function ToolsScreen() {
           );
         })}
       </div>
+      
+      {/* Reserved space for AdMob Banner to prevent CLS */}
+      <div className="min-h-[60px] w-full flex items-center justify-center mt-6 mb-6"></div>
     </div>
   );
 }
