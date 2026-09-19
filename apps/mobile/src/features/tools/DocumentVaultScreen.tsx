@@ -4,16 +4,12 @@ import { db } from '@student-os/storage';
 import { Trash2, FolderLock, ArrowLeft, ChevronRight, FileText, Image as ImageIcon, BookOpen, FileUp } from 'lucide-react';
 import { Card, Input, Button, Alert } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
+import { FileOpener } from '@capacitor-community/file-opener';
+import { saveBase64ToDisk, deleteFileFromDisk } from '../../lib/filesystem';
 
 function generateSafeId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
-
-// Convert data URL to Blob for native opening
-const dataUrlToBlob = async (dataUrl: string) => {
-  const res = await fetch(dataUrl);
-  return await res.blob();
-};
 
 export function DocumentVaultScreen() {
   const navigate = useNavigate();
@@ -141,11 +137,17 @@ export function DocumentVaultScreen() {
     if (!title.trim() || !previewFile || !selectedCourseId) return;
 
     try {
+      const docId = generateSafeId();
+      const ext = previewFile.type === 'application/pdf' ? 'pdf' : (previewFile.type === 'image/png' ? 'png' : 'jpg');
+      const safeName = `${docId}-${title.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${ext}`;
+      
+      const fileUri = await saveBase64ToDisk(previewFile.data, safeName);
+      
       const putPromise = db.documents.put({
-        id: generateSafeId(),
+        id: docId,
         courseId: selectedCourseId,
         title: title.trim(),
-        fileData: previewFile.data,
+        fileUri: fileUri,
         mimeType: previewFile.type,
         size: previewFile.size,
         createdAt: new Date().toISOString()
@@ -168,34 +170,25 @@ export function DocumentVaultScreen() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (doc: any) => {
     hapticImpact('medium');
-    await db.documents.delete(id);
+    if (doc.fileUri) {
+      await deleteFileFromDisk(doc.fileUri);
+    }
+    await db.documents.delete(doc.id);
     if (selectedCourseId) await fetchDocuments(selectedCourseId);
   };
 
   const handleOpenDocument = async (doc: any) => {
     hapticImpact('light');
     try {
-      const fileData = doc.fileData || doc.imageData;
-      if (!fileData) return;
-      
-      const blob = await dataUrlToBlob(fileData);
-      const url = URL.createObjectURL(blob);
-      
-      // Native anchor trigger
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = doc.title || 'document';
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) {
+      if (!doc.fileUri) {
+        throw new Error("File has not been migrated to disk yet. Restart the app to migrate.");
+      }
+      await FileOpener.open({ filePath: doc.fileUri, contentType: doc.mimeType });
+    } catch (e: any) {
       console.error("Failed to open document", e);
-      alert("Could not open document.");
+      alert("Could not open file: " + (e.message || 'Unknown error'));
     }
   };
 
@@ -386,7 +379,7 @@ export function DocumentVaultScreen() {
                       <Button 
                         variant="ghost" 
                         className="p-3 text-muted-foreground hover:text-red-500 rounded-lg shrink-0" 
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => handleDelete(doc)}
                       >
                         <Trash2 size={18} />
                       </Button>

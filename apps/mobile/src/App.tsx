@@ -89,6 +89,8 @@ function AppRouterContent() {
   );
 }
 
+import { runOutOfBandFilesystemMigration } from './lib/filesystem';
+
 export default function App() {
   React.useEffect(() => {
     // Request persistent storage to prevent browser from wiping IndexedDB to save space
@@ -105,6 +107,9 @@ export default function App() {
         console.error('Failed to hide splash screen', e);
       }
     }
+
+    // Trigger Out-Of-Band migration for legacy Base64 documents -> Disk
+    runOutOfBandFilesystemMigration();
   }, []);
 
   return (

@@ -64,7 +64,8 @@ export interface StudentDocument {
   courseId?: string; // Optional for legacy unassigned docs
   title: string; 
   imageData?: string; // Legacy support
-  fileData?: string; // Base64 string of the file
+  fileData?: string; // Legacy Base64 string of the file
+  fileUri?: string; // Capacitor Filesystem native path
   mimeType?: string; // e.g., "application/pdf", "image/jpeg"
   size?: number; // bytes
   createdAt: string;
