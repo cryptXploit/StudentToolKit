@@ -2,25 +2,36 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
-import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2, BookOpen } from 'lucide-react';
 import { scheduleEventReminder, cancelEventReminder } from '../../lib/notifications';
 import { hapticImpact } from '../../lib/haptics';
+import { generateSafeId } from '../../lib/id';
 import { Card, Input, Select, Button } from '@student-os/ui';
 
 export function PlannerScreen() {
-  const events = useLiveQuery(() => db.events.orderBy('date').toArray()) || [];
-  const activeEvents = events.filter(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1);
+  const events = useLiveQuery(async () => {
+    const data = await db.events.toArray();
+    return data.sort((a, b) => a.date - b.date);
+  });
+  
+  const courses = useLiveQuery(async () => {
+    const data = await db.courses.toArray();
+    return data.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  });
+
+  const activeEvents = events ? events.filter(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1) : [];
 
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [type, setType] = useState<'exam' | 'assignment'>('exam');
+  const [courseId, setCourseId] = useState<string>('');
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !dateStr) return;
     
-    const newId = crypto.randomUUID();
+    const newId = generateSafeId();
     const eventDateMs = new Date(dateStr).getTime();
 
     await db.events.put({
@@ -28,6 +39,7 @@ export function PlannerScreen() {
       title: title.trim(),
       date: eventDateMs,
       type,
+      courseId: courseId || undefined,
       isCompleted: false,
       createdAt: Date.now()
     });
@@ -37,6 +49,7 @@ export function PlannerScreen() {
     
     setTitle('');
     setDateStr('');
+    setCourseId('');
     setIsAdding(false);
   };
 
@@ -92,6 +105,18 @@ export function PlannerScreen() {
                 <option value="assignment">Assignment</option>
               </Select>
             </div>
+            
+            <div className="pt-1">
+              <Select 
+                value={courseId} onChange={e => setCourseId(e.target.value)}
+              >
+                <option value="">General Event (No Course)</option>
+                {courses?.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </Select>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <Button type="submit" variant="primary" className="flex-1 py-2">Add Event</Button>
               <Button type="button" variant="secondary" onClick={() => setIsAdding(false)} className="px-4 py-2">Cancel</Button>
@@ -101,7 +126,11 @@ export function PlannerScreen() {
       )}
 
       <div className="flex-1 overflow-y-auto pb-6 space-y-3">
-        {activeEvents.length === 0 && !isAdding ? (
+        {!Array.isArray(events) ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : activeEvents.length === 0 && !isAdding ? (
           <div className="flex flex-col items-center justify-center text-center h-40 text-muted-foreground">
             <Calendar className="mb-3 opacity-50" size={40} />
             <p className="font-medium">No upcoming events</p>
@@ -112,6 +141,7 @@ export function PlannerScreen() {
             const daysLeft = calculateDaysRemaining(event.date);
             const isUrgent = daysLeft >= 0 && daysLeft <= 3;
             const isPast = daysLeft < 0;
+            const eventCourse = courses?.find(c => c.id === event.courseId);
 
             return (
               <Card key={event.id} className="p-4 flex items-center">
@@ -120,7 +150,15 @@ export function PlannerScreen() {
                 </button>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground leading-tight">{event.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{event.type}</p>
+                  <div className="flex items-center text-xs text-muted-foreground mt-1 gap-2">
+                    <span className="uppercase tracking-wider font-medium">{event.type}</span>
+                    {eventCourse && (
+                      <span className="flex items-center bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">
+                        <BookOpen size={10} className="mr-1" />
+                        {eventCourse.name}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col items-end justify-center">
                   <div className={`text-right ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-muted-foreground' : 'text-primary font-medium'}`}>
@@ -143,3 +181,4 @@ export function PlannerScreen() {
     </div>
   );
 }
+

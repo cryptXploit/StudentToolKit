@@ -52,6 +52,7 @@ export interface AttendanceLog {
 
 export interface AcademicEvent {
   id: string; // UUID
+  courseId?: string; // Relational link to Course (optional)
   title: string;
   date: number; // Unix timestamp
   type: 'exam' | 'assignment' | 'other';

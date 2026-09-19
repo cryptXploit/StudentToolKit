@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { calculateAttendancePercentage } from '@student-os/engine';
+import { calculateAttendancePercentage, calculateDaysRemaining } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
@@ -45,6 +45,20 @@ export function CourseDetailScreen() {
       const data = await db.attendance.where({ courseId }).toArray();
       // Sort natively in JS to avoid Dexie index dependencies
       return data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (e) {
+      console.error("Dexie Query Failed:", e);
+      return [];
+    }
+  }, [courseId]);
+
+  const courseEvents = useLiveQuery(async () => {
+    try {
+      if (!db || !courseId) return [];
+      const data = await db.events.toArray();
+      // Filter in-memory to bypass schema index
+      return data
+        .filter(e => e.courseId === courseId && !e.isCompleted)
+        .sort((a, b) => a.date - b.date);
     } catch (e) {
       console.error("Dexie Query Failed:", e);
       return [];
@@ -260,6 +274,47 @@ export function CourseDetailScreen() {
               </Button>
             </Card>
           ))
+        )}
+      </div>
+
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
+        <h3 className="text-sm font-medium text-foreground mb-1">Upcoming Assessments</h3>
+        
+        {courseEvents === undefined ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : !Array.isArray(courseEvents) ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">Loading assessments...</div>
+        ) : courseEvents.length === 0 ? (
+          <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+            <p className="text-sm text-muted-foreground">No upcoming assessments for this course.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {courseEvents.map(event => {
+              const daysLeft = calculateDaysRemaining(event.date);
+              const isUrgent = daysLeft >= 0 && daysLeft <= 3;
+              const isPast = daysLeft < 0;
+
+              return (
+                <Card key={event.id} className="p-4 flex flex-col">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-foreground text-sm">{event.title}</h4>
+                    <span className="text-[10px] uppercase tracking-wider font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                      {event.type}
+                    </span>
+                  </div>
+                  <div className={`text-xs ${isUrgent ? 'text-red-500 font-bold' : isPast ? 'text-muted-foreground' : 'text-primary font-medium'} flex items-center`}>
+                    <Clock size={12} className="mr-1" />
+                    <span>
+                      {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : daysLeft < 0 ? 'Overdue' : `${daysLeft} days`}
+                    </span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
 
