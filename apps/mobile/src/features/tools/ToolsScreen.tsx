@@ -1,11 +1,20 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
 export function ToolsScreen() {
   const tools = [
+    {
+      id: 'cumulative-cgpa',
+      title: 'Cumulative CGPA',
+      description: 'Combine past semesters to find your overall CGPA.',
+      icon: Layers,
+      path: '/tools/cumulative-cgpa',
+      color: 'text-violet-500',
+      bg: 'bg-violet-50 dark:bg-violet-950/30'
+    },
     {
       id: 'semester-gpa',
       title: 'Semester GPA',

@@ -34,6 +34,38 @@ export function calculateSemesterGPA(courses: CourseRecord[]): number {
   return Math.round((gpa + Number.EPSILON) * 100) / 100;
 }
 
+export const SemesterRecordSchema = z.object({
+  credit: z.number().positive(),
+  gpa: z.number().min(0),
+});
+
+export type SemesterRecord = z.infer<typeof SemesterRecordSchema>;
+
+/**
+ * Calculates the Cumulative CGPA for a given set of semesters.
+ * @param semesters Array of completed semesters with credits and gpa.
+ * @returns The calculated CGPA rounded to 2 decimal places, or 0.00 if no credits.
+ */
+export function calculateCumulativeCGPA(semesters: SemesterRecord[]): number {
+  if (!semesters || semesters.length === 0) return 0.00;
+
+  let totalCredits = 0;
+  let totalPoints = 0;
+
+  for (const sem of semesters) {
+    const parsed = SemesterRecordSchema.safeParse(sem);
+    if (parsed.success) {
+      totalCredits += sem.credit;
+      totalPoints += (sem.credit * sem.gpa);
+    }
+  }
+
+  if (totalCredits === 0) return 0.00;
+
+  const cgpa = totalPoints / totalCredits;
+  return Math.round((cgpa + Number.EPSILON) * 100) / 100;
+}
+
 export const TargetGPASchema = z.object({
   currentCGPA: z.number().min(0).max(5.0),
   currentCredits: z.number().nonnegative(),

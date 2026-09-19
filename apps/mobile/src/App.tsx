@@ -10,6 +10,7 @@ const ToolsScreen = lazy(() => import('./features/tools/ToolsScreen').then(m => 
 const TargetGPAScreen = lazy(() => import('./features/tools/TargetGPAScreen').then(m => ({ default: m.TargetGPAScreen })));
 const AttendanceScreen = lazy(() => import('./features/tools/AttendanceScreen').then(m => ({ default: m.AttendanceScreen })));
 const SemesterGPAScreen = lazy(() => import('./features/tools/SemesterGPAScreen').then(m => ({ default: m.SemesterGPAScreen })));
+const CumulativeCGPAScreen = lazy(() => import('./features/tools/CumulativeCGPAScreen').then(m => ({ default: m.CumulativeCGPAScreen })));
 const PlannerScreen = lazy(() => import('./features/planner/PlannerScreen').then(m => ({ default: m.PlannerScreen })));
 const ProfileScreen = lazy(() => import('./features/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 
@@ -62,6 +63,7 @@ function AppRouterContent() {
               <Route path="/tools" element={<ToolsScreen />} />
               <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
+              <Route path="/tools/cumulative-cgpa" element={<CumulativeCGPAScreen />} />
               <Route path="/tools/attendance" element={<AttendanceScreen />} />
               <Route path="/planner" element={<PlannerScreen />} />
               <Route path="/profile" element={<ProfileScreen />} />
