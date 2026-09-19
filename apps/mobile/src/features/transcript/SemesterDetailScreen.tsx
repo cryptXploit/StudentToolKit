@@ -6,6 +6,7 @@ import { calculateSemesterGPA } from '@student-os/engine';
 import { Card, Input, Button, Alert } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
+import { syncTranscriptToProfile } from '../../lib/sync';
 
 export function SemesterDetailScreen() {
   const { semesterId } = useParams<{ semesterId: string }>();
@@ -44,12 +45,14 @@ export function SemesterDetailScreen() {
     setCourseName('');
     setCourseCredit('');
     setCourseGrade('');
+    await syncTranscriptToProfile();
     hapticImpact('light');
   };
 
   const handleDeleteCourse = async (id: string) => {
     hapticImpact('medium');
     await db.courses.delete(id);
+    await syncTranscriptToProfile();
   };
 
   const semesterStats = useMemo(() => {

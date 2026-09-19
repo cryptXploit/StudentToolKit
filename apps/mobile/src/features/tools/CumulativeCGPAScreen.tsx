@@ -1,15 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { calculateCumulativeCGPA } from '@student-os/engine';
+import { calculateCumulativeCGPA, calculateSemesterGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Share2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Share2, Save, RefreshCcw } from 'lucide-react';
 import { Card, Input, Button } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { shareContent } from '../../lib/share';
 
 export function CumulativeCGPAScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
+  const hasSemesters = useLiveQuery(() => db.semesters.count()) || 0;
   const [isSaved, setIsSaved] = useState(false);
 
   const [semesters, setSemesters] = useState([
@@ -59,6 +60,40 @@ export function CumulativeCGPAScreen() {
     });
     
     setIsSaved(true);
+  };
+
+  const handleLoadTranscript = async () => {
+    hapticImpact('light');
+    const allSemesters = await db.semesters.toArray();
+    const allCourses = await db.courses.toArray();
+
+    const loadedSemesters = allSemesters.map(sem => {
+      const semCourses = allCourses.filter(c => c.semesterId === sem.id);
+      const validCourses = semCourses.filter(c => typeof c.grade === 'number' && c.grade >= 0 && c.credit > 0);
+      
+      let gpa = 0;
+      let totalCredits = 0;
+      
+      if (validCourses.length > 0) {
+        const courseRecords = validCourses.map(c => ({
+          credits: c.credit,
+          gradePoint: c.grade as number
+        }));
+        gpa = calculateSemesterGPA(courseRecords);
+        totalCredits = validCourses.reduce((sum, c) => sum + c.credit, 0);
+      }
+      
+      return {
+        id: crypto.randomUUID(),
+        name: sem.name,
+        credit: totalCredits > 0 ? totalCredits.toString() : '',
+        gpa: totalCredits > 0 ? gpa.toString() : ''
+      };
+    }).filter(s => s.credit !== '' && s.gpa !== '');
+
+    if (loadedSemesters.length > 0) {
+      setSemesters([...loadedSemesters, { id: crypto.randomUUID(), name: '', credit: '', gpa: '' }]);
+    }
   };
 
   const addSemester = () => {
@@ -124,6 +159,16 @@ export function CumulativeCGPAScreen() {
       </Card>
 
       <div className="space-y-3 flex-1 overflow-y-auto pb-6">
+        {hasSemesters > 0 && (
+          <Button 
+            variant="secondary" 
+            className="w-full mb-4 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700" 
+            onClick={handleLoadTranscript}
+          >
+            <RefreshCcw className="mr-2" size={16} /> Load from Transcript
+          </Button>
+        )}
+
         <div className="flex px-1 text-xs font-medium text-muted uppercase tracking-wider mb-2">
           <div className="flex-[2] mr-2">Semester (Opt)</div>
           <div className="flex-1 mr-2">Credits</div>
