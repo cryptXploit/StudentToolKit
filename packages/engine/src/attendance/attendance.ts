@@ -60,3 +60,25 @@ export function calculateAttendanceStatus(input: AttendanceInput): AttendanceRes
     requiredClasses,
   };
 }
+
+export function calculateAttendancePercentage(logs: { status: string }[]): number {
+  if (!logs || logs.length === 0) return 0;
+
+  let attended = 0;
+  let totalValidClasses = 0;
+
+  for (const log of logs) {
+    if (log.status === 'present' || log.status === 'late') {
+      attended++;
+      totalValidClasses++;
+    } else if (log.status === 'absent') {
+      totalValidClasses++;
+    }
+    // 'excused' is ignored completely
+  }
+
+  if (totalValidClasses === 0) return 0;
+
+  const percentage = (attended / totalValidClasses) * 100;
+  return Math.round((percentage + Number.EPSILON) * 100) / 100;
+}

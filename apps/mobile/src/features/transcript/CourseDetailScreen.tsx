@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
+import { calculateAttendancePercentage } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
-import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -24,6 +25,43 @@ export function CourseDetailScreen() {
   const routineSlots = useLiveQuery(() => 
     courseId ? db.routine.where({ courseId }).toArray() : []
   ) || [];
+
+  const attendanceLogs = useLiveQuery(() => 
+    courseId ? db.attendance.where({ courseId }).reverse().sortBy('date') : []
+  ) || [];
+
+  // calculate attendance on the fly
+  const currentPercentage = useMemo(() => 
+    calculateAttendancePercentage(attendanceLogs),
+    [attendanceLogs]
+  );
+
+  const handleLogAttendance = async (status: 'present' | 'absent' | 'late') => {
+    if (!courseId) return;
+    
+    // Natively get local YYYY-MM-DD
+    const today = new Date().toLocaleDateString('en-CA');
+    
+    const existingLog = await db.attendance.where('[courseId+date]').equals([courseId, today]).first();
+    
+    if (existingLog) {
+      await db.attendance.update(existingLog.id, { 
+        status, 
+        updatedAt: new Date().toISOString() 
+      });
+    } else {
+      await db.attendance.put({
+        id: crypto.randomUUID(),
+        courseId,
+        date: today,
+        status,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    hapticImpact('light');
+  };
 
   // Sort slots by day then by startTime
   const sortedSlots = [...routineSlots].sort((a, b) => {
@@ -182,6 +220,74 @@ export function CourseDetailScreen() {
               </Button>
             </Card>
           ))
+        )}
+      </div>
+
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
+        <h3 className="text-sm font-medium text-foreground mb-1">Attendance Tracker</h3>
+        
+        <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary">
+          <p className="text-sm text-muted mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
+          <div className={`text-4xl font-bold ${attendanceLogs.length === 0 ? 'text-slate-400' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
+            {attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
+          </div>
+        </Card>
+
+        <div className="grid grid-cols-3 gap-2">
+          <Button 
+            variant="secondary" 
+            className="flex flex-col items-center py-3 bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/50"
+            onClick={() => handleLogAttendance('present')}
+          >
+            <CheckCircle size={20} className="mb-1" />
+            <span className="text-[11px] font-medium">Present</span>
+          </Button>
+          <Button 
+            variant="secondary" 
+            className="flex flex-col items-center py-3 bg-red-50 text-red-600 border-red-100 hover:bg-red-100 dark:bg-red-950/30 dark:border-red-900/50"
+            onClick={() => handleLogAttendance('absent')}
+          >
+            <XCircle size={20} className="mb-1" />
+            <span className="text-[11px] font-medium">Absent</span>
+          </Button>
+          <Button 
+            variant="secondary" 
+            className="flex flex-col items-center py-3 bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100 dark:bg-orange-950/30 dark:border-orange-900/50"
+            onClick={() => handleLogAttendance('late')}
+          >
+            <Clock size={20} className="mb-1" />
+            <span className="text-[11px] font-medium">Late</span>
+          </Button>
+        </div>
+
+        {attendanceLogs.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Recent Logs</h4>
+            {attendanceLogs.slice(0, 5).map(log => (
+              <Card key={log.id} className="flex items-center justify-between p-3">
+                <div>
+                  <p className="font-medium text-sm text-foreground">{new Date(log.date).toLocaleDateString()}</p>
+                  <p className={`text-xs font-semibold uppercase tracking-wider mt-0.5 ${
+                    log.status === 'present' ? 'text-emerald-500' :
+                    log.status === 'absent' ? 'text-red-500' :
+                    'text-orange-500'
+                  }`}>
+                    {log.status}
+                  </p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  className="p-2 text-slate-400 hover:text-red-500 rounded-lg shrink-0" 
+                  onClick={async () => {
+                    hapticImpact('medium');
+                    await db.attendance.delete(log.id);
+                  }}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>
