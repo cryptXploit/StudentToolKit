@@ -11,6 +11,8 @@ export function ProfileScreen() {
   const [department, setDepartment] = useState('');
   const [maxScale, setMaxScale] = useState('4.00');
   const [targetCGPA, setTargetCGPA] = useState('');
+  const [currentCGPA, setCurrentCGPA] = useState('');
+  const [totalCredits, setTotalCredits] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +23,8 @@ export function ProfileScreen() {
       setDepartment(profile.department || '');
       setMaxScale(profile.maxGradingScale?.toFixed(2) || '4.00');
       if (profile.targetCGPA) setTargetCGPA(profile.targetCGPA.toFixed(2));
+      if (profile.currentCGPA) setCurrentCGPA(profile.currentCGPA.toString());
+      if (profile.totalCredits) setTotalCredits(profile.totalCredits.toString());
     }
   }, [profile]);
 
@@ -31,6 +35,8 @@ export function ProfileScreen() {
       department: department.trim(),
       maxGradingScale: parseFloat(maxScale) || 4.0,
       targetCGPA: targetCGPA ? parseFloat(targetCGPA) : undefined,
+      currentCGPA: currentCGPA ? parseFloat(currentCGPA) : undefined,
+      totalCredits: totalCredits ? parseFloat(totalCredits) : undefined,
       updatedAt: Date.now(),
     });
     
@@ -118,7 +124,7 @@ export function ProfileScreen() {
         </Card>
 
         {/* Grading Scale */}
-        <Card className="p-4">
+        <Card className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>
@@ -138,6 +144,28 @@ export function ProfileScreen() {
               <Input
                 type="number" step="0.01" min="1.0" max="10.0"
                 placeholder="e.g. 3.50" value={targetCGPA} onChange={(e) => setTargetCGPA(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>
+                <Hash className="mr-2 text-primary" size={16} />
+                Current CGPA
+              </Label>
+              <Input
+                type="number" step="0.01" min="0" max="10.0"
+                placeholder="e.g. 3.20" value={currentCGPA} onChange={(e) => setCurrentCGPA(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>
+                <Hash className="mr-2 text-primary" size={16} />
+                Total Credits
+              </Label>
+              <Input
+                type="number" step="0.5" min="0"
+                placeholder="e.g. 90" value={totalCredits} onChange={(e) => setTotalCredits(e.target.value)}
               />
             </div>
           </div>
@@ -176,6 +204,16 @@ export function ProfileScreen() {
           </Button>
         </div>
       </section>
+
+      {/* Legal & Version Footer */}
+      <footer className="mt-8 mb-4 text-center">
+        <p className="text-sm text-slate-400">Student OS v1.0.0</p>
+        <p className="text-xs text-slate-400 mt-1">
+          <a href="https://studentos.app/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
+            Privacy Policy
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
