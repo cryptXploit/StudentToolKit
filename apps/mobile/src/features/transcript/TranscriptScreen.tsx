@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { BookOpen, Plus, Trash2, ChevronRight } from 'lucide-react';
-import { Card, Input, Button } from '@student-os/ui';
+import { Card, Button } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
 import { Link } from 'react-router-dom';
@@ -25,19 +25,21 @@ export function TranscriptScreen() {
     }
   }, []);
 
-  const handleAddSemester = async (e?: React.FormEvent) => {
+  const handleAddSemester = async (e?: any) => {
     if (e && e.preventDefault) e.preventDefault();
     setSaveError(null);
-
-    if (!newSemesterName.trim()) {
-      setSaveError("Semester name cannot be empty.");
+    
+    const nameToSave = newSemesterName.trim();
+    
+    if (!nameToSave) {
+      alert("Input state is empty! The text isn't saving to React state.");
       return;
     }
     
     try {
       await db.semesters.put({
         id: generateSafeId(),
-        name: newSemesterName.trim(),
+        name: nameToSave,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
@@ -66,23 +68,24 @@ export function TranscriptScreen() {
       </header>
 
       {saveError && <div className="text-red-500 text-sm mb-2">{saveError}</div>}
-      <form onSubmit={handleAddSemester} className="flex gap-2 mb-6">
-        <Input 
-          placeholder="Semester Name (e.g., Fall 2026)" 
-          value={newSemesterName} 
-          onChange={(e) => setNewSemesterName(e.target.value)} 
-          className="flex-1"
+      <div className="flex gap-2 mb-6">
+        <input 
+          type="text"
+          value={newSemesterName}
+          onChange={(e) => setNewSemesterName(e.target.value)}
+          placeholder="Semester Name (e.g. Fall 2026)"
+          className="flex h-10 flex-1 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground"
         />
         <Button 
-          type="submit"
+          type="button"
           variant="primary" 
           disabled={!newSemesterName.trim()}
           onClick={handleAddSemester}
-          className="px-4"
+          className="px-4 shrink-0"
         >
           <Plus size={20} />
         </Button>
-      </form>
+      </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
         {semesters === undefined || !Array.isArray(semesters) ? (
