@@ -1,5 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { Home, Calculator, Calendar, User } from 'lucide-react';
 
 // Lazy load screens (mapping named exports to default exports for React.lazy)
@@ -46,11 +48,13 @@ const ScreenLoader = () => (
   </div>
 );
 
-export default function App() {
+function AppRouterContent() {
+  useAndroidBackButton();
+
   return (
-    <BrowserRouter>
-      <div className="h-screen flex flex-col overflow-hidden bg-background pt-safe">
-        <main className="flex-1 overflow-y-auto pb-20 relative">
+    <div className="h-screen flex flex-col overflow-hidden bg-background pt-safe">
+      <main className="flex-1 overflow-y-auto pb-20 relative">
+        <GlobalErrorBoundary>
           <Suspense fallback={<ScreenLoader />}>
             <Routes>
               <Route path="/" element={<HomeScreen />} />
@@ -61,9 +65,17 @@ export default function App() {
               <Route path="/profile" element={<ProfileScreen />} />
             </Routes>
           </Suspense>
-        </main>
-        <Navigation />
-      </div>
+        </GlobalErrorBoundary>
+      </main>
+      <Navigation />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRouterContent />
     </BrowserRouter>
   );
 }

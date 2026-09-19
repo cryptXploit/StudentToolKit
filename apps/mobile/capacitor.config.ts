@@ -5,6 +5,10 @@ const config: CapacitorConfig = {
   appName: 'Student OS',
   webDir: 'dist',
   bundledWebRuntime: false,
+  // server: {
+  //   url: 'http://192.168.X.X:3000', // এখানে আপনার পিসির Local IP Address দিন
+  //   cleartext: true
+  // },
   plugins: {
     SplashScreen: {
       launchShowDuration: 1500,
