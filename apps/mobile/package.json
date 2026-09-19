@@ -26,6 +26,7 @@
     "@student-os/storage": "workspace:*",
     "@student-os/ui": "workspace:*",
     "dexie-react-hooks": "^1.1.7",
+    "jszip": "^3.10.2",
     "lucide-react": "^0.363.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

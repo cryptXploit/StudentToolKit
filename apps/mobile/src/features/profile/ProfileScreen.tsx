@@ -69,18 +69,15 @@ export function ProfileScreen() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        await restoreEcosystemBackup(event.target?.result as string);
-        hapticImpact('medium');
-        alert('Ecosystem restored successfully! Please restart the app or navigate to Home.');
-        window.location.reload(); // Force reload to re-mount live queries
-      } catch (err) {
-        alert('Failed to restore data. Invalid backup file.');
-      }
-    };
-    reader.readAsText(file);
+    try {
+      await restoreEcosystemBackup(file);
+      hapticImpact('medium');
+      alert('Ecosystem restored successfully! Please restart the app or navigate to Home.');
+      window.location.reload(); // Force reload to re-mount live queries
+    } catch (err) {
+      console.error(err);
+      alert('Failed to restore data. Invalid backup file.');
+    }
     
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -228,7 +225,7 @@ export function ProfileScreen() {
             Export
           </Button>
           
-          <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
+          <input type="file" accept=".zip" className="hidden" ref={fileInputRef} onChange={handleImport} />
           
           <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Upload className="mr-2 text-primary" size={16} />

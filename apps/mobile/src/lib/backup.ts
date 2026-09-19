@@ -1,4 +1,7 @@
 import { db } from '@student-os/storage';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import JSZip from 'jszip';
 
 export async function generateEcosystemBackup() {
   const profile = await db.profile.toArray();
@@ -24,18 +27,51 @@ export async function generateEcosystemBackup() {
   };
 
   const json = JSON.stringify(backupData, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = window.URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `student-os-backup-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  
-  window.URL.revokeObjectURL(url);
+  const zip = new JSZip();
+  zip.file('ecosystem.json', json);
+
+  for (const doc of documents) {
+    if (doc.fileUri) {
+      try {
+        const fileData = await Filesystem.readFile({
+          path: doc.fileUri
+        });
+        
+        const parts = doc.fileUri.split('/');
+        const filename = parts[parts.length - 1];
+        
+        zip.file('documents/' + filename, fileData.data, { base64: true });
+      } catch (e) {
+        console.error('Failed to read file for backup:', doc.fileUri, e);
+      }
+    }
+  }
+
+  const zipBase64 = await zip.generateAsync({ type: 'base64' });
+  const backupFilename = `prepia-backup-${new Date().toISOString().split('T')[0]}.zip`;
+
+  const savedFile = await Filesystem.writeFile({
+    path: backupFilename,
+    data: zipBase64,
+    directory: Directory.Cache
+  });
+
+  await Share.share({
+    title: 'Prepia Backup',
+    url: savedFile.uri,
+    dialogTitle: 'Save your Prepia Academic Memory'
+  });
 }
 
-export async function restoreEcosystemBackup(jsonString: string) {
+export async function restoreEcosystemBackup(file: File) {
+  const zip = await JSZip.loadAsync(file);
+  
+  const ecosystemFile = zip.file('ecosystem.json');
+  if (!ecosystemFile) {
+    throw new Error('Invalid backup file. ecosystem.json missing.');
+  }
+
+  const jsonString = await ecosystemFile.async('string');
   const parsed = JSON.parse(jsonString);
   
   if (!parsed || !parsed.data) {
@@ -66,4 +102,28 @@ export async function restoreEcosystemBackup(jsonString: string) {
       if (parsed.data.documents?.length) await db.documents.bulkAdd(parsed.data.documents);
     }
   );
+
+  // Restore the physical files
+  const documentFiles = zip.folder('documents');
+  if (documentFiles) {
+    for (const relativePath in documentFiles.files) {
+      const zipFile = documentFiles.files[relativePath];
+      if (!zipFile.dir) {
+        const parts = relativePath.split('/');
+        const filename = parts[parts.length - 1];
+        
+        try {
+          const base64Data = await zipFile.async('base64');
+          await Filesystem.writeFile({
+            path: `DocumentVault/${filename}`,
+            data: base64Data,
+            directory: Directory.Data,
+            recursive: true
+          });
+        } catch (e) {
+          console.error('Failed to restore document file:', relativePath, e);
+        }
+      }
+    }
+  }
 }
