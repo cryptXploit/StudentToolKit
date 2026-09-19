@@ -22,7 +22,7 @@ export function SemesterDetailScreen() {
 
   const courses = useLiveQuery(() => 
     semesterId ? db.courses.where({ semesterId }).toArray() : []
-  ) || [];
+  );
 
   const handleAddCourse = async () => {
     if (!semesterId) return;
@@ -56,6 +56,7 @@ export function SemesterDetailScreen() {
   };
 
   const semesterStats = useMemo(() => {
+    if (!courses) return { gpa: 0, totalCredits: 0 };
     const validCourses = courses.filter(c => typeof c.grade === 'number' && c.grade >= 0 && c.credit > 0);
     const engineRecords = validCourses.map(c => ({
       credits: c.credit,
@@ -148,7 +149,11 @@ export function SemesterDetailScreen() {
       </Card>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
-        {courses.length === 0 ? (
+        {courses === undefined ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : courses.length === 0 ? (
           <div className="text-center p-6 opacity-70">
             <p className="text-sm text-muted">No courses added yet. Add your first course above.</p>
           </div>

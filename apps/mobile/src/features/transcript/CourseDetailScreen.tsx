@@ -24,15 +24,15 @@ export function CourseDetailScreen() {
 
   const routineSlots = useLiveQuery(() => 
     courseId ? db.routine.where({ courseId }).toArray() : []
-  ) || [];
+  );
 
   const attendanceLogs = useLiveQuery(() => 
     courseId ? db.attendance.where({ courseId }).reverse().sortBy('date') : []
-  ) || [];
+  );
 
   // calculate attendance on the fly
   const currentPercentage = useMemo(() => 
-    calculateAttendancePercentage(attendanceLogs),
+    calculateAttendancePercentage(attendanceLogs || []),
     [attendanceLogs]
   );
 
@@ -64,12 +64,12 @@ export function CourseDetailScreen() {
   };
 
   // Sort slots by day then by startTime
-  const sortedSlots = [...routineSlots].sort((a, b) => {
+  const sortedSlots = routineSlots ? [...routineSlots].sort((a, b) => {
     if (a.dayOfWeek !== b.dayOfWeek) {
       return a.dayOfWeek - b.dayOfWeek;
     }
     return a.startTime.localeCompare(b.startTime);
-  });
+  }) : undefined;
 
   const handleAddRoutine = async () => {
     if (!courseId || !startTime || !endTime) return;
@@ -189,7 +189,11 @@ export function CourseDetailScreen() {
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
         <h3 className="text-sm font-medium text-foreground mb-3">Weekly Schedule</h3>
         
-        {sortedSlots.length === 0 ? (
+        {sortedSlots === undefined ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : sortedSlots.length === 0 ? (
           <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
             <p className="text-sm text-muted">No classes scheduled yet. Add your class times above.</p>
           </div>
@@ -228,8 +232,8 @@ export function CourseDetailScreen() {
         
         <Card className="p-5 text-center flex flex-col items-center justify-center border-l-4 border-l-primary">
           <p className="text-sm text-muted mb-1 uppercase tracking-widest font-medium">Current Percentage</p>
-          <div className={`text-4xl font-bold ${attendanceLogs.length === 0 ? 'text-slate-400' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
-            {attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
+          <div className={`text-4xl font-bold ${!attendanceLogs || attendanceLogs.length === 0 ? 'text-slate-400' : currentPercentage < 75 ? 'text-red-500' : 'text-emerald-500'}`}>
+            {attendanceLogs && attendanceLogs.length > 0 ? `${currentPercentage}%` : '--'}
           </div>
         </Card>
 
@@ -260,7 +264,7 @@ export function CourseDetailScreen() {
           </Button>
         </div>
 
-        {attendanceLogs.length > 0 && (
+        {attendanceLogs && attendanceLogs.length > 0 && (
           <div className="mt-4 space-y-2">
             <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Recent Logs</h4>
             {attendanceLogs.slice(0, 5).map(log => (

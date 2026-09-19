@@ -13,7 +13,7 @@ export function DocumentVaultScreen() {
 
   const documents = useLiveQuery(() => 
     db.documents.orderBy('createdAt').reverse().toArray()
-  ) || [];
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,7 +123,11 @@ export function DocumentVaultScreen() {
       <div className="flex-1 overflow-y-auto space-y-4 pb-6">
         <h3 className="text-sm font-medium text-foreground mb-3">Saved Documents</h3>
         
-        {documents.length === 0 ? (
+        {documents === undefined ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : documents.length === 0 ? (
           <div className="text-center p-6 opacity-70 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
             <p className="text-sm text-muted">No documents saved yet.</p>
           </div>

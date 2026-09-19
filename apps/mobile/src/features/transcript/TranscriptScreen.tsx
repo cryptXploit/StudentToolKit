@@ -11,7 +11,7 @@ export function TranscriptScreen() {
 
   const semesters = useLiveQuery(() => 
     db.semesters.orderBy('createdAt').toArray()
-  ) || [];
+  );
 
   const handleAddSemester = async () => {
     if (!newSemesterName.trim()) return;
@@ -60,7 +60,11 @@ export function TranscriptScreen() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pb-6">
-        {semesters.length === 0 ? (
+        {semesters === undefined ? (
+          <div className="flex justify-center p-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin opacity-50"></div>
+          </div>
+        ) : semesters.length === 0 ? (
           <Card className="p-6 text-center flex flex-col items-center justify-center h-48 opacity-70">
             <BookOpen className="text-muted mb-3" size={32} />
             <p className="text-sm text-muted">You haven't added any semesters yet. Build your academic memory by adding your first one above.</p>
