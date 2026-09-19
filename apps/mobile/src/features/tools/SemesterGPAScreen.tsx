@@ -3,6 +3,7 @@ import { calculateSemesterGPA } from '@student-os/engine';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { Card, Input, Button } from '@student-os/ui';
+import { hapticImpact } from '../../lib/haptics';
 
 export function SemesterGPAScreen() {
   const [courses, setCourses] = useState([
@@ -36,11 +37,13 @@ export function SemesterGPAScreen() {
   }, [courses]);
 
   const addCourse = () => {
+    hapticImpact('light');
     setCourses([...courses, { id: crypto.randomUUID(), name: '', credit: '', grade: '' }]);
   };
 
   const removeCourse = (id: string) => {
     if (courses.length > 1) {
+      hapticImpact('medium');
       setCourses(courses.filter(c => c.id !== id));
     }
   };

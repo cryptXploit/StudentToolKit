@@ -4,8 +4,7 @@ import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
 import { Calendar, Plus, Clock, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { scheduleEventReminder, cancelEventReminder } from '../../lib/notifications';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { hapticImpact } from '../../lib/haptics';
 import { Card, Input, Select, Button } from '@student-os/ui';
 
 export function PlannerScreen() {
@@ -42,9 +41,7 @@ export function PlannerScreen() {
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
-    if (Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: currentStatus ? ImpactStyle.Light : ImpactStyle.Medium }).catch(() => {});
-    }
+    hapticImpact(currentStatus ? 'light' : 'medium');
     
     if (!currentStatus) {
       // Event is being marked as completed, cancel the notification
@@ -55,9 +52,7 @@ export function PlannerScreen() {
   };
 
   const handleDelete = async (id: string) => {
-    if (Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    }
+    hapticImpact('light');
     
     await cancelEventReminder(id);
     await db.events.delete(id);
