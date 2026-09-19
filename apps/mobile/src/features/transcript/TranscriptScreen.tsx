@@ -5,6 +5,7 @@ import { BookOpen, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
+import { deleteSemesterCascade } from '../../lib/cascade';
 import { Link } from 'react-router-dom';
 
 function generateSafeId() {
@@ -69,10 +70,7 @@ export function TranscriptScreen() {
 
   const handleDeleteSemester = async (id: string) => {
     hapticImpact('medium');
-    await db.transaction('rw', db.semesters, db.courses, async () => {
-      await db.courses.where({ semesterId: id }).delete();
-      await db.semesters.delete(id);
-    });
+    await deleteSemesterCascade(id);
     await syncTranscriptToProfile();
     await fetchSemesters();
   };

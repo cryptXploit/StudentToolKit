@@ -7,6 +7,7 @@ import { Card, Input, Button, Alert } from '@student-os/ui';
 import { ArrowLeft, Trash2, Plus, AlertCircle, ChevronRight } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 import { syncTranscriptToProfile } from '../../lib/sync';
+import { deleteCourseCascade } from '../../lib/cascade';
 
 export function SemesterDetailScreen() {
   const { semesterId } = useParams<{ semesterId: string }>();
@@ -70,7 +71,7 @@ export function SemesterDetailScreen() {
 
   const handleDeleteCourse = async (id: string) => {
     hapticImpact('medium');
-    await db.courses.delete(id);
+    await deleteCourseCascade(id);
     await syncTranscriptToProfile();
   };
 
