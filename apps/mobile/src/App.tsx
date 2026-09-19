@@ -1,8 +1,10 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
 import { Home, Calculator, Calendar, User } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // Lazy load screens (mapping named exports to default exports for React.lazy)
 const HomeScreen = lazy(() => import('./features/dashboard/HomeScreen').then(m => ({ default: m.HomeScreen })));
@@ -77,6 +79,16 @@ function AppRouterContent() {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        SplashScreen.hide();
+      } catch (e) {
+        console.error('Failed to hide splash screen', e);
+      }
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <AppRouterContent />
