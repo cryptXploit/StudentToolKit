@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useState, useEffect } from 'react';
+
 import { db } from '@student-os/storage';
 import { BookOpen, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { Card, Button } from '@student-os/ui';
@@ -14,15 +14,21 @@ function generateSafeId() {
 export function TranscriptScreen() {
   const [newSemesterName, setNewSemesterName] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [semesters, setSemesters] = useState<any[] | undefined>(undefined);
 
-  const semesters = useLiveQuery(async () => {
+  const fetchSemesters = async () => {
     try {
-      if (!db || typeof db.semesters === 'undefined') return [];
-      return await db.semesters.orderBy('createdAt').toArray();
+      if (!db || typeof db.semesters === 'undefined') return;
+      const data = await db.semesters.orderBy('createdAt').toArray();
+      setSemesters(data);
     } catch (error) {
-      console.error("Dexie Query Failed:", error);
-      return [];
+      console.error("Dexie Fetch Error:", error);
+      setSemesters([]);
     }
+  };
+
+  useEffect(() => {
+    fetchSemesters();
   }, []);
 
   const handleAddSemester = async (e?: any) => {
@@ -51,6 +57,8 @@ export function TranscriptScreen() {
       await Promise.race([putPromise, timeoutPromise]);
       setNewSemesterName('');
       hapticImpact('light');
+      
+      await fetchSemesters();
     } catch (error: any) {
       console.error("Failed to save semester:", error);
       setSaveError(error.message || "Unknown database error occurred.");
@@ -64,6 +72,7 @@ export function TranscriptScreen() {
       await db.semesters.delete(id);
     });
     await syncTranscriptToProfile();
+    await fetchSemesters();
   };
 
   return (
