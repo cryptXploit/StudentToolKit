@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
-import { Home, Calculator, Calendar, User } from 'lucide-react';
+import { Home, Calculator, Calendar, User, BookOpen } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
 
@@ -15,11 +15,13 @@ const SemesterGPAScreen = lazy(() => import('./features/tools/SemesterGPAScreen'
 const CumulativeCGPAScreen = lazy(() => import('./features/tools/CumulativeCGPAScreen').then(m => ({ default: m.CumulativeCGPAScreen })));
 const PlannerScreen = lazy(() => import('./features/planner/PlannerScreen').then(m => ({ default: m.PlannerScreen })));
 const ProfileScreen = lazy(() => import('./features/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
+const TranscriptScreen = lazy(() => import('./features/transcript/TranscriptScreen').then(m => ({ default: m.TranscriptScreen })));
 
 function Navigation() {
   const location = useLocation();
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
+    { path: '/transcript', icon: BookOpen, label: 'Memory' },
     { path: '/tools', icon: Calculator, label: 'Tools' },
     { path: '/planner', icon: Calendar, label: 'Planner' },
     { path: '/profile', icon: User, label: 'Profile' },
@@ -62,6 +64,7 @@ function AppRouterContent() {
           <Suspense fallback={<ScreenLoader />}>
             <Routes>
               <Route path="/" element={<HomeScreen />} />
+              <Route path="/transcript" element={<TranscriptScreen />} />
               <Route path="/tools" element={<ToolsScreen />} />
               <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
