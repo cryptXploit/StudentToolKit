@@ -1,6 +1,7 @@
 import { db } from '@student-os/storage';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 import JSZip from 'jszip';
 
 export async function generateEcosystemBackup() {
@@ -47,20 +48,34 @@ export async function generateEcosystemBackup() {
     }
   }
 
-  const zipBase64 = await zip.generateAsync({ type: 'base64' });
-  const backupFilename = `prepia-backup-${new Date().toISOString().split('T')[0]}.zip`;
+  if (Capacitor.isNativePlatform()) {
+    const zipBase64 = await zip.generateAsync({ type: 'base64' });
+    const backupFilename = `prepia-backup-${new Date().toISOString().split('T')[0]}.zip`;
 
-  const savedFile = await Filesystem.writeFile({
-    path: backupFilename,
-    data: zipBase64,
-    directory: Directory.Cache
-  });
+    const savedFile = await Filesystem.writeFile({
+      path: backupFilename,
+      data: zipBase64,
+      directory: Directory.Cache
+    });
 
-  await Share.share({
-    title: 'Prepia Backup',
-    url: savedFile.uri,
-    dialogTitle: 'Save your Prepia Academic Memory'
-  });
+    await Share.share({
+      title: 'Prepia Backup',
+      url: savedFile.uri,
+      dialogTitle: 'Save your Prepia Academic Memory'
+    });
+  } else {
+    // Web Fallback
+    const backupFilename = `prepia-backup-${new Date().toISOString().split('T')[0]}.zip`;
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = backupFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 }
 
 export async function restoreEcosystemBackup(file: File) {
