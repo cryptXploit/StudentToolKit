@@ -164,7 +164,7 @@ export function TranscriptScreen() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">Academic Transcript</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your semesters and grades.</p>

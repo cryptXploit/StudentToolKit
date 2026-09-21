@@ -35,14 +35,20 @@ export function HomeScreen() {
     const profileContext = await db.profile.get('me');
     const activeSemesterId = profileContext?.activeSemesterId;
     
-    let events = await db.events.toArray();
-    const allCourses = await db.courses.toArray();
-    const allAttendance = await db.attendance.toArray();
+    const activeCourses = activeSemesterId 
+      ? await db.courses.where({ semesterId: activeSemesterId }).toArray()
+      : await db.courses.toArray();
+
+    const activeCourseIds = activeCourses.map(c => c.id);
     
-    let activeCourses = allCourses;
+    let allAttendance: any[] = [];
+    if (activeCourseIds.length > 0) {
+      allAttendance = await db.attendance.where('courseId').anyOf(activeCourseIds).toArray();
+    }
+    
+    let events = await db.events.filter(e => e.isCompleted === false).toArray();
     if (activeSemesterId) {
-      activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
-      events = events.filter(e => !e.courseId || activeCourses.some(c => c.id === e.courseId));
+      events = events.filter(e => !e.courseId || activeCourseIds.includes(e.courseId));
     }
     
     const attentionItems: AttentionItem[] = [];
@@ -81,14 +87,14 @@ export function HomeScreen() {
     
     for (const e of incompleteEvents) {
       const daysLeft = calculateDaysRemaining(e.date);
-      if (daysLeft >= -1) {
-        upcomingEvents.push({
-          event: e,
-          course: allCourses.find(c => c.id === e.courseId)
-        });
-      }
-      
-      const courseName = allCourses.find(c => c.id === e.courseId)?.name || 'General';
+        if (daysLeft >= -1) {
+          upcomingEvents.push({
+            event: e,
+            course: activeCourses.find((c: any) => c.id === e.courseId)
+          });
+        }
+        
+        const courseName = activeCourses.find((c: any) => c.id === e.courseId)?.name || 'General';
       
       // Rule 2: Exams
       if (e.type === 'exam' && daysLeft >= 0 && daysLeft <= 4) {
@@ -131,16 +137,27 @@ export function HomeScreen() {
     
     const todayDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday...
     
-    let slots = await db.routine.where({ dayOfWeek: todayDayOfWeek }).toArray();
-    const allCourses = await db.courses.toArray();
-    const todaysLogs = await db.attendance.where({ date: today }).toArray();
-    const allAttendance = await db.attendance.toArray();
+    const allCourses = activeSemesterId 
+      ? await db.courses.where({ semesterId: activeSemesterId }).toArray()
+      : await db.courses.toArray();
+      
+    const activeCourseIds = allCourses.map(c => c.id);
     
-    if (activeSemesterId) {
-      const activeCourses = allCourses.filter(c => c.semesterId === activeSemesterId);
-      slots = slots.filter(slot => activeCourses.some(c => c.id === slot.courseId));
-    }
-    
+    let slots = activeCourseIds.length > 0 
+      ? await db.routine.where('courseId').anyOf(activeCourseIds).toArray()
+      : [];
+    slots = slots.filter(slot => slot.dayOfWeek === todayDayOfWeek);
+
+    const slotCourseIds = slots.map(s => s.courseId);
+
+    const todaysLogs = slotCourseIds.length > 0
+      ? await db.attendance.where('[courseId+date]').anyOf(slotCourseIds.map(id => [id, today])).toArray()
+      : [];
+      
+    const allAttendance = slotCourseIds.length > 0
+      ? await db.attendance.where('courseId').anyOf(slotCourseIds).toArray()
+      : [];
+      
     // Sort chronologically by start time (string comparison works for HH:mm)
     slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
     
@@ -261,7 +278,7 @@ export function HomeScreen() {
   }, [dashboardData, todaysClasses]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 mt-2">
         <h1 className="text-2xl font-bold text-foreground">{greeting}</h1>
         <p className="text-muted-foreground text-sm mt-1">{dateString}</p>

@@ -34,7 +34,7 @@ export function AttendanceScreen() {
   }, [attended, total, targetPercentage]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 flex items-center">
         <Link className="p-2 -ml-2 mr-2 text-muted-foreground hover:text-foreground" to="/tools">
           <ArrowLeft size={24} />

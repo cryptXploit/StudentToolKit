@@ -154,7 +154,7 @@ export function SemesterDetailScreen() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 mt-2 flex items-center justify-between">
         <div className="flex items-center flex-1 min-w-0">
           <Button variant="ghost" className="mr-2 p-2 -ml-2 shrink-0" onClick={() => navigate(-1)}>

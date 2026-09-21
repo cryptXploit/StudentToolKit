@@ -63,7 +63,7 @@ function AppRouterContent() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background pt-safe">
-      <main className="flex-1 overflow-y-auto pb-20 relative">
+      <main className="flex-1 overflow-y-auto relative">
         <GlobalErrorBoundary>
           <Suspense fallback={<ScreenLoader />}>
             <Routes>
@@ -83,6 +83,8 @@ function AppRouterContent() {
             </Routes>
           </Suspense>
         </GlobalErrorBoundary>
+        {/* Universal spacer to guarantee scroll clearance for the fixed bottom navigation */}
+        <div className="h-32 w-full flex-shrink-0" />
       </main>
       <Navigation />
     </div>
