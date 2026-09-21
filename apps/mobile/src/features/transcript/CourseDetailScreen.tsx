@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
@@ -77,8 +77,8 @@ export function CourseDetailScreen() {
       const data = await db.events.toArray();
       // Filter in-memory to bypass schema index
       return data
-        .filter(e => e.courseId === courseId && !e.isCompleted)
-        .sort((a, b) => a.date - b.date);
+        .filter(e => e.courseId === courseId)
+        .sort((a, b) => { if (a.isCompleted === b.isCompleted) return a.date - b.date; return a.isCompleted ? 1 : -1; });
     } catch (e) {
       console.error("Dexie Query Failed:", e);
       return [];
@@ -313,7 +313,7 @@ export function CourseDetailScreen() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 mt-2 flex items-center">
         <Button variant="ghost" className="mr-2 p-2 -ml-2 shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft size={24} />
@@ -583,7 +583,7 @@ export function CourseDetailScreen() {
               return (
                 <Card key={event.id} className="p-4 flex flex-col">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-foreground text-sm">{event.title}</h4>
+                    <h4 className={`font-semibold text-sm ${event.isCompleted ? 'text-muted-foreground line-through opacity-70' : 'text-foreground'}`}>{event.title}</h4>
                     <span className="text-[10px] uppercase tracking-wider font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                       {event.type}
                     </span>
@@ -785,3 +785,6 @@ export function CourseDetailScreen() {
     </div>
   );
 }
+
+
+

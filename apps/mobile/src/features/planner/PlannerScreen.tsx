@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+ï»¿import { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateDaysRemaining } from '@student-os/engine';
@@ -36,7 +36,7 @@ export function PlannerScreen() {
     return await db.routine.toArray();
   });
 
-  const activeEvents = events ? events.filter(e => !e.isCompleted && calculateDaysRemaining(e.date) >= -1) : [];
+  const activeEvents = events ? events.filter(e => calculateDaysRemaining(e.date) >= -1).sort((a, b) => { if (a.isCompleted === b.isCompleted) return a.date - b.date; return a.isCompleted ? 1 : -1; }) : [];
 
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
@@ -69,14 +69,15 @@ export function PlannerScreen() {
     setIsAdding(false);
   };
 
-  const toggleStatus = async (id: string, currentStatus: boolean) => {
+  const toggleStatus = async (event: any) => {
+    const currentStatus = event.isCompleted;
     hapticImpact(currentStatus ? 'light' : 'medium');
-    
     if (!currentStatus) {
-      await cancelEventReminder(id);
+      await cancelEventReminder(event.id);
+    } else {
+      await scheduleEventReminder(event.id, event.title, event.date, event.type);
     }
-    
-    await db.events.update(id, { isCompleted: !currentStatus });
+    await db.events.update(event.id, { isCompleted: !currentStatus });
   };
 
   const [itemToDelete, setItemToDelete] = useState<{ id: string, name: string } | null>(null);
@@ -117,7 +118,7 @@ export function PlannerScreen() {
             id: `${slot.id}-${slotDate.getTime()}`,
             type: 'class',
             title: course ? course.name : 'Class',
-            subtitle: `${slot.startTime} - ${slot.endTime} ${slot.roomNumber ? `• ${slot.roomNumber}` : ''}`,
+            subtitle: `${slot.startTime} - ${slot.endTime} ${slot.roomNumber ? `ï¿½ ${slot.roomNumber}` : ''}`,
             absoluteDateMs: slotDate.getTime(),
             courseId: slot.courseId,
           });
@@ -126,7 +127,7 @@ export function PlannerScreen() {
     }
 
     const sevenDaysFromNowMs = today.getTime() + (7 * 24 * 60 * 60 * 1000);
-    const windowEvents = events.filter(e => !e.isCompleted && e.date >= today.getTime() && e.date < sevenDaysFromNowMs);
+    const windowEvents = events.filter(e => e.date >= today.getTime() && e.date < sevenDaysFromNowMs);
     
     windowEvents.forEach(e => {
       const course = courses.find(c => c.id === e.courseId);
@@ -169,7 +170,7 @@ export function PlannerScreen() {
   }, [timelineProjection]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto h-full flex flex-col">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-4 mt-2 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Academic Timeline</h1>
@@ -303,11 +304,11 @@ export function PlannerScreen() {
 
               return (
                 <Card key={event.id} className="p-4 flex items-center">
-                  <button onClick={() => toggleStatus(event.id, event.isCompleted)} className="mr-4 text-muted-foreground hover:text-primary transition-colors">
+                  <button onClick={() => toggleStatus(event)} className="mr-4 text-muted-foreground hover:text-primary transition-colors">
                     {event.isCompleted ? <CheckCircle2 className="text-primary"/> : <Circle/>}
                   </button>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground leading-tight">{event.title}</h3>
+                    <h3 className={`font-semibold leading-tight ${event.isCompleted ? 'text-muted-foreground line-through opacity-70' : 'text-foreground'}`}>{event.title}</h3>
                     <div className="flex items-center text-xs text-muted-foreground mt-1 gap-2">
                       <span className="uppercase tracking-wider font-medium">{event.type}</span>
                       {eventCourse && (
@@ -347,3 +348,6 @@ export function PlannerScreen() {
     </div>
   );
 }
+
+
+

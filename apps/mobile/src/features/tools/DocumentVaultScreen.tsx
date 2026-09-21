@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db } from '@student-os/storage';
 import { Trash2, FolderLock, ArrowLeft, ChevronRight, FileText, Image as ImageIcon, BookOpen, FileUp, Folder } from 'lucide-react';
 import { Card, Input, Button, Alert } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
+import { Capacitor } from '@capacitor/core';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { saveBase64ToDisk, deleteFileFromDisk } from '../../lib/filesystem';
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
@@ -20,18 +21,7 @@ export function DocumentVaultScreen() {
   const [selectedSemester, setSelectedSemester] = useState<any | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
 
-  useEffect(() => {
-    const state = location.state as any;
-    if (state && state.initialSemesterId && state.initialCourseId) {
-      setSelectedSemester({ id: state.initialSemesterId, name: 'Semester' });
-      setSelectedCourse({ id: state.initialCourseId, name: state.initialCourseName || 'Course' });
-      
-      // Clear state so manual back navigation doesn't get stuck
-      navigate('.', { replace: true, state: {} });
-    }
-  }, [location.state, navigate]);
-
-  // Data State
+// Data State
   const [semesters, setSemesters] = useState<any[] | undefined>(undefined);
   const [courses, setCourses] = useState<any[] | undefined>(undefined);
   const [documents, setDocuments] = useState<any[] | undefined>(undefined);
@@ -84,10 +74,18 @@ export function DocumentVaultScreen() {
     }
   };
 
-  const fetchDocuments = async (course: any) => {
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(0);
+  const [totalDocs, setTotalDocs] = useState(0);
+
+  const fetchDocuments = async (course: any, pageIndex: number = 0) => {
     try {
-      setDocuments(undefined);
-      const data = await db.documents.where({ courseId: course.id }).toArray();
+      if (pageIndex === 0) setDocuments(undefined);
+      
+      const total = await db.documents.where({ courseId: course.id }).count();
+      setTotalDocs(total);
+      
+      const data = await db.documents.where({ courseId: course.id }).limit((pageIndex + 1) * PAGE_SIZE).toArray();
       data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setDocuments(data);
     } catch (e) {
@@ -106,9 +104,21 @@ export function DocumentVaultScreen() {
     fetchCourses(sem);
   };
 
+  useEffect(() => {
+    const state = location.state as any;
+    if (state && state.initialSemesterId && state.initialCourseId) {
+      setSelectedSemester({ id: state.initialSemesterId, name: 'Semester' });
+      const initialCourse = { id: state.initialCourseId, name: state.initialCourseName || 'Course' };
+      setSelectedCourse(initialCourse);
+      fetchDocuments(initialCourse, 0);
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
+
   const handleSelectCourse = (course: any) => {
     setSelectedCourse(course);
-    fetchDocuments(course);
+    setPage(0);
+    fetchDocuments(course, 0);
   };
 
   const handleBack = () => {
@@ -121,6 +131,12 @@ export function DocumentVaultScreen() {
     } else {
       navigate(-1);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchDocuments(selectedCourse, nextPage);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +197,8 @@ export function DocumentVaultScreen() {
       setPreviewFile(null);
       hapticImpact('light');
       
-      await fetchDocuments(selectedCourse);
+      setPage(0);
+      await fetchDocuments(selectedCourse, 0);
     } catch (error: any) {
       console.error("Failed to save document:", error);
       setSaveError(error.message || "Unknown database error occurred.");
@@ -197,7 +214,7 @@ export function DocumentVaultScreen() {
       await deleteFileFromDisk(itemToDelete.fileUri);
     }
     await db.documents.delete(itemToDelete.id);
-    if (selectedCourse) await fetchDocuments(selectedCourse);
+    if (selectedCourse) await fetchDocuments(selectedCourse, page);
     setItemToDelete(null);
   };
 
@@ -215,7 +232,7 @@ export function DocumentVaultScreen() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col h-full">
+    <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
       <header className="mb-6 mt-2 flex items-center">
         <Button variant="ghost" className="mr-2 p-2 -ml-2 shrink-0" onClick={handleBack}>
           <ArrowLeft size={24} />
@@ -384,8 +401,23 @@ export function DocumentVaultScreen() {
             ) : (
               documents.map(doc => {
                 const isPdf = doc.mimeType === 'application/pdf' || (!doc.mimeType && !doc.fileUri);
+                  const isImage = doc.mimeType?.startsWith('image/') || (!isPdf && doc.fileUri);
+                  const imageSrc = isImage && doc.fileUri ? Capacitor.convertFileSrc(doc.fileUri) : null;
                 return (
-                  <Card key={doc.id} className="p-1">
+                  <Card key={doc.id} className="p-1 overflow-hidden">
+                      {imageSrc && (
+                        <div 
+                          className="w-full h-32 bg-slate-100 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800 cursor-pointer"
+                          onClick={() => handleOpenDocument(doc)}
+                        >
+                          <img 
+                            src={imageSrc} 
+                            loading="lazy" 
+                            className="w-full h-full object-cover opacity-90 transition-opacity" 
+                            alt={doc.title} 
+                          />
+                        </div>
+                      )}
                     <div className="flex items-center justify-between pl-3 p-1">
                       <button 
                         className="flex items-center flex-1 text-left active:scale-95 transition-transform py-2"
@@ -413,6 +445,14 @@ export function DocumentVaultScreen() {
                 );
               })
             )}
+            
+            {documents && documents.length < totalDocs && (
+              <div className="flex justify-center mt-4 pt-2 pb-4">
+                <Button variant="secondary" onClick={handleLoadMore} className="text-xs py-2 px-6">
+                  Load More
+                </Button>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -426,3 +466,7 @@ export function DocumentVaultScreen() {
     </div>
   );
 }
+
+
+
+
