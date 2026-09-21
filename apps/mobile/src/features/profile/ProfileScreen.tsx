@@ -2,10 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { generateEcosystemBackup, restoreEcosystemBackup } from '../../lib/backup';
-import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield } from 'lucide-react';
+import { runOutOfBandFilesystemMigration } from '../../lib/filesystem';
+import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield, RefreshCcw } from 'lucide-react';
 import { Button, Card, Input, Label } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
 import { Link } from 'react-router-dom';
+
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
+import { BellOff, BellRing } from 'lucide-react';
 
 export function ProfileScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
@@ -21,8 +26,30 @@ export function ProfileScreen() {
   const [totalCredits, setTotalCredits] = useState('');
   const [targetAttendance, setTargetAttendance] = useState('75');
   const [isSaved, setIsSaved] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [notifyStatus, setNotifyStatus] = useState<string>('checking...');
+
+  useEffect(() => {
+    const checkNotificationPerms = async () => {
+      if (!Capacitor.isNativePlatform()) {
+        setNotifyStatus('unsupported');
+        return;
+      }
+      try {
+        const { display } = await LocalNotifications.checkPermissions();
+        setNotifyStatus(display); // 'granted', 'denied', or 'prompt'
+      } catch (e) {
+        console.warn('Failed to check notification permissions', e);
+        setNotifyStatus('error');
+      }
+    };
+    checkNotificationPerms();
+    
+    // Also re-check when app is foregrounded if App plugin was used, but we'll stick to mount.
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -88,6 +115,19 @@ export function ProfileScreen() {
     
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleForceSync = async () => {
+    try {
+      setIsSyncing(true);
+      await runOutOfBandFilesystemMigration();
+      hapticImpact('medium');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to sync storage.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -218,9 +258,44 @@ export function ProfileScreen() {
         {isSaved ? <><Check className="mr-2" size={20} />Saved Locally</> : 'Save Profile'}
       </Button>
 
-      {/* App Settings Section */}
-      <section className="mt-8">
-        <Link to="/settings">
+      {/* App Settings & Notifications Section */}
+      <section className="mt-8 space-y-3">
+        <Card className="flex flex-col p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-foreground">
+              <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg mr-3">
+                {notifyStatus === 'granted' ? (
+                  <BellRing className="text-emerald-500" size={20} />
+                ) : (
+                  <BellOff className="text-red-500" size={20} />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">System Notifications</h3>
+                <p className="text-xs text-muted-foreground">Class and Exam Alerts</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              {notifyStatus === 'checking...' ? (
+                <span className="text-xs text-muted-foreground">Checking...</span>
+              ) : notifyStatus === 'granted' ? (
+                <span className="text-xs font-semibold text-emerald-500 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-md">Active</span>
+              ) : notifyStatus === 'unsupported' ? (
+                <span className="text-xs text-muted-foreground">N/A</span>
+              ) : (
+                <span className="text-xs font-semibold text-red-500 px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded-md">Disabled</span>
+              )}
+            </div>
+          </div>
+          
+          {(notifyStatus === 'denied' || notifyStatus === 'prompt' || notifyStatus === 'prompt-with-rationale') && (
+            <div className="mt-3 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg leading-relaxed">
+              Reminders are disabled. Please enable notifications in your Android Settings to receive class and exam alerts.
+            </div>
+          )}
+        </Card>
+
+        <Link to="/settings" className="block">
           <Card className="flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors cursor-pointer">
             <div className="flex items-center text-foreground">
               <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg mr-3">
@@ -246,7 +321,7 @@ export function ProfileScreen() {
           Your data is stored securely on your device. Export a backup before uninstalling or moving to a new phone.
         </p>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 mb-6">
           <Button onClick={handleExport} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Download className="mr-2 text-primary" size={16} />
             Export
@@ -259,6 +334,27 @@ export function ProfileScreen() {
             Restore
           </Button>
         </div>
+
+        <Card className="p-4 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+          <div className="flex flex-col items-center text-center">
+            <h3 className="font-semibold text-sm mb-1">Advanced Storage</h3>
+            <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+              Moves legacy documents to optimized local storage.
+            </p>
+            <Button 
+              variant="secondary" 
+              onClick={handleForceSync} 
+              disabled={isSyncing}
+              className="w-full py-2.5 text-sm font-medium"
+            >
+              {isSyncing ? (
+                <><RefreshCcw className="mr-2 animate-spin text-primary" size={16} /> Syncing...</>
+              ) : (
+                <><RefreshCcw className="mr-2 text-primary" size={16} /> Force Storage Sync</>
+              )}
+            </Button>
+          </div>
+        </Card>
       </section>
 
       {/* Legal & Version Footer */}

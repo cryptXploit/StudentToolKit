@@ -7,19 +7,31 @@ export async function requestNotificationPermission(): Promise<boolean> {
     return false;
   }
 
-  const { display } = await LocalNotifications.checkPermissions();
-  if (display !== 'granted') {
-    const { display: newStatus } = await LocalNotifications.requestPermissions();
-    return newStatus === 'granted';
+  try {
+    const { display } = await LocalNotifications.checkPermissions();
+    if (display === 'granted') return true;
+    if (display === 'denied') return false;
+    
+    if (display === 'prompt' || display === 'prompt-with-rationale') {
+      const { display: newStatus } = await LocalNotifications.requestPermissions();
+      return newStatus === 'granted';
+    }
+    
+    return false;
+  } catch (e) {
+    console.warn('Failed to check or request notification permissions', e);
+    return false;
   }
-  return true;
 }
 
 export async function scheduleEventReminder(eventId: string, title: string, eventDateMs: number, type: string) {
   if (!Capacitor.isNativePlatform()) return;
 
   const hasPermission = await requestNotificationPermission();
-  if (!hasPermission) return;
+  if (!hasPermission) {
+    console.warn('Notifications permission denied. Aborting reminder schedule.');
+    return;
+  }
 
   // Schedule for 9 AM the day before the event
   const scheduleDate = new Date(eventDateMs);
@@ -74,7 +86,10 @@ export async function scheduleRoutineReminder(slot: any, courseName: string) {
   if (!Capacitor.isNativePlatform()) return;
 
   const hasPermission = await requestNotificationPermission();
-  if (!hasPermission) return;
+  if (!hasPermission) {
+    console.warn('Notifications permission denied. Aborting reminder schedule.');
+    return;
+  }
 
   try {
     const [hoursStr, minutesStr] = slot.startTime.split(':');
