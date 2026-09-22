@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateRequiredGPA } from '@student-os/engine';
@@ -7,20 +7,20 @@ import { ArrowLeft, Target, Info, AlertTriangle, Share2 } from 'lucide-react';
 import { Card, Input, Label, Alert, Button } from '@student-os/ui';
 import { shareContent } from '../../lib/share';
 
-export function TargetGPAScreen() {
+export function TargetCGPACalculatorScreen() {
   const profile = useLiveQuery(() => db.profile.get('me'));
   
   const [currentCGPA, setCurrentCGPA] = useState('');
-  const [currentCredits, setCurrentCredits] = useState('');
+  const [completedCredits, setCompletedCredits] = useState('');
   const [targetCGPA, setTargetCGPA] = useState('');
-  const [remainingCredits, setRemainingCredits] = useState('');
+  const [futureCredits, setFutureCredits] = useState('');
 
   // Pre-fill fields from profile if they exist
   useEffect(() => {
     if (profile) {
       if (profile.targetCGPA && !targetCGPA) setTargetCGPA(profile.targetCGPA.toString());
       if (profile.currentCGPA && !currentCGPA) setCurrentCGPA(profile.currentCGPA.toString());
-      if (profile.totalCredits && !currentCredits) setCurrentCredits(profile.totalCredits.toString());
+      if (profile.totalCredits && !completedCredits) setCompletedCredits(profile.totalCredits.toString());
     }
   }, [profile]);
 
@@ -28,9 +28,9 @@ export function TargetGPAScreen() {
 
   const { result, error } = useMemo(() => {
     const currGPA = parseFloat(currentCGPA);
-    const currCreds = parseFloat(currentCredits);
+    const currCreds = parseFloat(completedCredits);
     const target = parseFloat(targetCGPA);
-    const remCreds = parseFloat(remainingCredits);
+    const remCreds = parseFloat(futureCredits);
 
     if (
       isNaN(currGPA) || isNaN(currCreds) || isNaN(target) || isNaN(remCreds) ||
@@ -51,7 +51,7 @@ export function TargetGPAScreen() {
     } catch (e) {
       return { result: null, error: e instanceof Error ? e.message : 'Invalid input' };
     }
-  }, [currentCGPA, currentCredits, targetCGPA, remainingCredits, maxScale]);
+  }, [currentCGPA, completedCredits, targetCGPA, futureCredits, maxScale]);
 
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
@@ -60,7 +60,7 @@ export function TargetGPAScreen() {
           <ArrowLeft size={24} />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Target CGPA</h1>
+          <h1 className="text-xl font-bold text-foreground">Target CGPA Calculator</h1>
           <p className="text-muted-foreground text-sm">Scale: {maxScale.toFixed(2)}</p>
         </div>
       </header>
@@ -80,7 +80,7 @@ export function TargetGPAScreen() {
             <Input
               type="number" step="0.5" min="0"
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
-              placeholder="e.g. 90" value={currentCredits} onChange={e => setCurrentCredits(e.target.value)}
+              placeholder="e.g. 90" value={completedCredits} onChange={e => setCompletedCredits(e.target.value)}
             />
           </Card>
           <Card className="p-3 border-l-4 border-l-primary">
@@ -92,11 +92,11 @@ export function TargetGPAScreen() {
             />
           </Card>
           <Card className="p-3">
-            <Label className="text-xs mb-1 text-muted-foreground">Remaining Credits</Label>
+            <Label className="text-xs mb-1 text-muted-foreground">Future Credits</Label>
             <Input
               type="number" step="0.5" min="0"
               className="px-0 py-0 border-none bg-transparent text-lg font-semibold"
-              placeholder="e.g. 30" value={remainingCredits} onChange={e => setRemainingCredits(e.target.value)}
+              placeholder="e.g. 30" value={futureCredits} onChange={e => setFutureCredits(e.target.value)}
             />
           </Card>
         </div>
@@ -113,7 +113,7 @@ export function TargetGPAScreen() {
               <div className="flex items-center mb-2">
                 {result.isPossible ? <Target className="mr-2 opacity-80" size={20} /> : <Info className="mr-2 opacity-80" size={20} />}
                 <h2 className="text-sm font-medium opacity-90">
-                  {result.isPossible ? 'Required Average GPA' : 'Target mathematically impossible'}
+                  {result.isPossible ? 'Required Average GPA' : 'Impossible Target'}
                 </h2>
               </div>
               
@@ -123,8 +123,8 @@ export function TargetGPAScreen() {
               
               <p className="text-sm opacity-90 leading-relaxed mb-4">
                 {result.isPossible 
-                  ? `To reach your target CGPA of ${targetCGPA}, you need to maintain approximately a ${result.requiredGPA.toFixed(2)} average across your remaining ${remainingCredits} credits.`
-                  : `Even if you score a perfect ${maxScale.toFixed(2)} in your remaining credits, you cannot mathematically reach ${targetCGPA}.`
+                  ? `You need to maintain an average GPA of ${result.requiredGPA.toFixed(2)} across your next ${futureCredits} credits.`
+                  : `This target is mathematically impossible with the planned credits. Try increasing future credits or adjusting the target.`
                 }
               </p>
               
@@ -134,7 +134,7 @@ export function TargetGPAScreen() {
                   className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20"
                   onClick={() => shareContent(
                     'Target GPA Result', 
-                    `🎯 I need to maintain a ${result.requiredGPA.toFixed(2)} GPA over my remaining ${remainingCredits} credits to hit my target of ${targetCGPA}! Calculated instantly on Student OS.`
+                    `dYZ_ I need to maintain a ${result.requiredGPA.toFixed(2)} GPA over my remaining ${futureCredits} credits to hit my target of ${targetCGPA}! Calculated instantly on Student OS.`
                   )}
                 >
                   <Share2 className="mr-2" size={16} /> Share Result

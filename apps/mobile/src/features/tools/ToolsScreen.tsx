@@ -38,7 +38,7 @@ export function ToolsScreen() {
       title: 'Target CGPA Calculator',
       description: 'Find out exactly what you need in your remaining credits.',
       icon: Target,
-      path: '/tools/target-gpa',
+      path: '/tools/target-cgpa',
       color: 'text-blue-500',
       bg: 'bg-blue-50 dark:bg-blue-950/30'
     },
@@ -130,4 +130,5 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 

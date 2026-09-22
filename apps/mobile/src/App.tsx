@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+﻿import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { useAndroidBackButton } from './hooks/useAndroidBackButton';
@@ -9,7 +9,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 // Lazy load screens (mapping named exports to default exports for React.lazy)
 const HomeScreen = lazy(() => import('./features/dashboard/HomeScreen').then(m => ({ default: m.HomeScreen })));
 const ToolsScreen = lazy(() => import('./features/tools/ToolsScreen').then(m => ({ default: m.ToolsScreen })));
-const TargetGPAScreen = lazy(() => import('./features/tools/TargetGPAScreen').then(m => ({ default: m.TargetGPAScreen })));
+const TargetCGPACalculatorScreen = lazy(() => import('./features/tools/TargetCGPACalculatorScreen').then(m => ({ default: m.TargetCGPACalculatorScreen })));
 const AttendanceScreen = lazy(() => import('./features/tools/AttendanceScreen').then(m => ({ default: m.AttendanceScreen })));
 const SemesterGPAScreen = lazy(() => import('./features/tools/SemesterGPAScreen').then(m => ({ default: m.SemesterGPAScreen })));
 const CumulativeCGPAScreen = lazy(() => import('./features/tools/CumulativeCGPAScreen').then(m => ({ default: m.CumulativeCGPAScreen })));
@@ -72,7 +72,7 @@ function AppRouterContent() {
               <Route path="/transcript/:semesterId" element={<SemesterDetailScreen />} />
               <Route path="/course/:courseId" element={<CourseDetailScreen />} />
               <Route path="/tools" element={<ToolsScreen />} />
-              <Route path="/tools/target-gpa" element={<TargetGPAScreen />} />
+              <Route path="/tools/target-cgpa" element={<TargetCGPACalculatorScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
               <Route path="/tools/cumulative-cgpa" element={<CumulativeCGPAScreen />} />
               <Route path="/tools/attendance" element={<AttendanceScreen />} />
@@ -120,3 +120,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
