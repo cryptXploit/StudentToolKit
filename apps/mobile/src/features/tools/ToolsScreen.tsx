@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
@@ -60,6 +60,15 @@ export function ToolsScreen() {
       color: 'text-pink-500',
       bg: 'bg-pink-50 dark:bg-pink-950/30'
     },
+      {
+        id: 'pomodoro',
+        title: 'Pomodoro Timer',
+        description: 'Deep work and study sessions.',
+        icon: Timer,
+        path: '/tools/pomodoro',
+        color: 'text-indigo-500',
+        bg: 'bg-indigo-50 dark:bg-indigo-950/30'
+      },
       {
         id: 'bunk-planner',
         title: 'Bunk Planner',
@@ -131,6 +140,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 
