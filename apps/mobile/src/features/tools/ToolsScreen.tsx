@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer, ArrowLeftRight } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer, ArrowLeftRight, Clock } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
@@ -88,6 +88,15 @@ export function ToolsScreen() {
         bg: 'bg-blue-50 dark:bg-blue-950/30'
       },
       {
+        id: 'stopwatch',
+        title: 'Stopwatch',
+        description: 'Precise lap timer for open-ended tracking.',
+        icon: Clock,
+        path: '/tools/stopwatch',
+        color: 'text-fuchsia-500',
+        bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/30'
+      },
+      {
         id: 'bunk-planner',
         title: 'Bunk Planner',
         description: 'Simulate absences and test attendance limits.',
@@ -158,6 +167,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 

@@ -15,6 +15,7 @@ const TimetableBuilderScreen = lazy(() => import('./features/tools/TimetableBuil
 const AcademicWhatIfScreen = lazy(() => import('./features/tools/AcademicWhatIfScreen').then(m => ({ default: m.AcademicWhatIfScreen })));
 const BunkPlannerScreen = lazy(() => import('./features/tools/BunkPlannerScreen').then(m => ({ default: m.BunkPlannerScreen })));
 const PomodoroScreen = lazy(() => import('./features/tools/PomodoroScreen').then(m => ({ default: m.PomodoroScreen })));
+const StopwatchScreen = lazy(() => import('./features/tools/StopwatchScreen').then(m => ({ default: m.StopwatchScreen })));
 const CalculatorScreen = lazy(() => import('./features/tools/CalculatorScreen').then(m => ({ default: m.CalculatorScreen })));
 const UnitConverterScreen = lazy(() => import('./features/tools/UnitConverterScreen').then(m => ({ default: m.UnitConverterScreen })));
 const SemesterGPAScreen = lazy(() => import('./features/tools/SemesterGPAScreen').then(m => ({ default: m.SemesterGPAScreen })));
@@ -83,6 +84,7 @@ function AppRouterContent() {
               <Route path="/tools/what-if" element={<AcademicWhatIfScreen />} />
               <Route path="/tools/bunk-planner" element={<BunkPlannerScreen />} />
               <Route path="/tools/pomodoro" element={<PomodoroScreen />} />
+              <Route path="/tools/stopwatch" element={<StopwatchScreen />} />
               <Route path="/tools/calculator" element={<CalculatorScreen />} />
               <Route path="/tools/converter" element={<UnitConverterScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
@@ -132,6 +134,7 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
 
 
 
