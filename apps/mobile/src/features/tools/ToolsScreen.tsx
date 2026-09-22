@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer, ArrowLeftRight } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
@@ -79,6 +79,15 @@ export function ToolsScreen() {
         bg: 'bg-indigo-50 dark:bg-indigo-950/30'
       },
       {
+        id: 'converter',
+        title: 'Unit Converter',
+        description: 'Length, weight, and temperature.',
+        icon: ArrowLeftRight,
+        path: '/tools/converter',
+        color: 'text-blue-500',
+        bg: 'bg-blue-50 dark:bg-blue-950/30'
+      },
+      {
         id: 'bunk-planner',
         title: 'Bunk Planner',
         description: 'Simulate absences and test attendance limits.',
@@ -149,6 +158,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 
