@@ -5,7 +5,7 @@ import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
 export function ToolsScreen() {
-  const tools = [
+  const tools: Array<{ id: string; title: string; description: string; icon: any; path: string; color: string; bg: string; disabled?: boolean }> = [
     {
       id: 'vault',
       title: 'Document Vault',
@@ -65,10 +65,9 @@ export function ToolsScreen() {
       title: 'Academic What-If',
       description: 'Simulate scenarios and dropped courses.',
       icon: HelpCircle,
-      path: '#',
+      path: '/tools/what-if',
       color: 'text-orange-500',
-      bg: 'bg-orange-50 dark:bg-orange-950/30',
-      disabled: true
+      bg: 'bg-orange-50 dark:bg-orange-950/30'
     }
   ];
 
@@ -90,7 +89,7 @@ export function ToolsScreen() {
         {tools.map((tool) => {
           const Icon = tool.icon;
           const CardContent = (
-            <Card className={`flex items-center p-4 ${tool.disabled ? 'opacity-60' : ''}`}>
+            <Card className={`flex items-center p-4`}>
               <div className={`p-3 rounded-xl mr-4 ${tool.bg}`}>
                 <Icon className={tool.color} size={24} />
               </div>
@@ -108,13 +107,7 @@ export function ToolsScreen() {
             </Card>
           );
 
-          if (tool.disabled) {
-            return (
-              <div key={tool.id} className="cursor-not-allowed">
-                {CardContent}
-              </div>
-            );
-          }
+          
 
           return (
             <Link key={tool.id} to={tool.path} className="active:scale-[0.98] transition-transform block">
@@ -129,6 +122,9 @@ export function ToolsScreen() {
     </div>
   );
 }
+
+
+
 
 
 
