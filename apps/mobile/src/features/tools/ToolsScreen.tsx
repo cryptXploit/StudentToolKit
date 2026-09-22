@@ -61,6 +61,15 @@ export function ToolsScreen() {
       bg: 'bg-pink-50 dark:bg-pink-950/30'
     },
       {
+        id: 'calculator',
+        title: 'Scientific Calculator',
+        description: 'Standard and basic scientific operations.',
+        icon: Calculator,
+        path: '/tools/calculator',
+        color: 'text-teal-500',
+        bg: 'bg-teal-50 dark:bg-teal-950/30'
+      },
+      {
         id: 'pomodoro',
         title: 'Pomodoro Timer',
         description: 'Deep work and study sessions.',
@@ -140,6 +149,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 
