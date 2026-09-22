@@ -1,4 +1,4 @@
-export interface StudentProfile {
+﻿export interface StudentProfile {
   id: string; // Will typically be 'me' as it's a single-user app
   universityName?: string;
   department?: string;
@@ -10,6 +10,8 @@ export interface StudentProfile {
   activeSemesterId?: string; // Pointer to current active semester
   targetAttendancePercentage?: number;
   updatedAt: number;
+  focusPassExpiresAt?: number;
+  adFreeUnlocked?: boolean;
 }
 
 export interface Semester {
@@ -76,3 +78,5 @@ export interface StudentDocument {
   size?: number; // bytes
   createdAt: string;
 }
+
+
