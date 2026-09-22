@@ -1,8 +1,8 @@
-import { CapacitorConfig } from '@capacitor/cli';
+﻿import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.student.os',
-  appName: 'Student OS',
+  appName: 'StudyTools',
   webDir: 'dist',
   bundledWebRuntime: false,
   // server: {
@@ -26,3 +26,5 @@ const config: CapacitorConfig = {
 };
 
 export default config;
+
+

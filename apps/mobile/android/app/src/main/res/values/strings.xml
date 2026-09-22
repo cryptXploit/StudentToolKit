@@ -1,7 +1,9 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Student OS</string>
-    <string name="title_activity_main">Student OS</string>
+    <string name="app_name">StudyTools</string>
+    <string name="title_activity_main">StudyTools</string>
     <string name="package_name">com.student.os</string>
     <string name="custom_url_scheme">com.student.os</string>
 </resources>
+
+
