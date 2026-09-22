@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { Link, useNavigate } from 'react-router-dom';
@@ -29,6 +29,8 @@ interface AttentionItem {
 export function HomeScreen() {
   const navigate = useNavigate();
   const profile = useLiveQuery(() => db.profile.get('me'));
+  const semesters = useLiveQuery(() => db.semesters.toArray());
+  const courses = useLiveQuery(() => db.courses.toArray());
   const today = new Date().toLocaleDateString('en-CA');
   
   const dashboardData = useLiveQuery(async () => {
@@ -276,6 +278,68 @@ export function HomeScreen() {
     };
     syncWidget();
   }, [dashboardData, todaysClasses]);
+
+  const isZeroState = semesters !== undefined && courses !== undefined && semesters.length === 0 && courses.length === 0;
+  
+  if (semesters === undefined || courses === undefined) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (isZeroState) {
+    return (
+      <div className="p-6 max-w-md mx-auto flex flex-col min-h-full pb-20 justify-center">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="text-blue-600 dark:text-blue-400" size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Welcome to Prepia</h1>
+          <p className="text-muted-foreground">Your offline-first intelligent academic toolkit.</p>
+        </div>
+
+        <div className="space-y-4">
+          <Link to="/profile" className="block active:scale-[0.98] transition-transform">
+            <Card className="p-4 flex items-center gap-4 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-900 border-l-4 border-l-blue-500 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                <Target className="text-blue-600 dark:text-blue-400" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Step 1: Set Your Target</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Establish your target CGPA and max grading scale in your profile.</p>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/transcript" className="block active:scale-[0.98] transition-transform">
+            <Card className="p-4 flex items-center gap-4 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-900 border-l-4 border-l-indigo-500 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                <CheckSquare className="text-indigo-600 dark:text-indigo-400" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Step 2: Add First Semester</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Create your active term and add your currently enrolled courses.</p>
+              </div>
+            </Card>
+          </Link>
+
+          <Link to="/tools/timetable" className="block active:scale-[0.98] transition-transform">
+            <Card className="p-4 flex items-center gap-4 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-900 border-l-4 border-l-teal-500 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+                <Calendar className="text-teal-600 dark:text-teal-400" size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Step 3: Build Timetable</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Map out your weekly routine to automate your daily schedule dashboard.</p>
+              </div>
+            </Card>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto flex flex-col">
@@ -545,3 +609,5 @@ export function HomeScreen() {
     </div>
   );
 }
+
+
