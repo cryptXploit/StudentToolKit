@@ -134,6 +134,7 @@ function AppRouterContent() {
 }
 
 import { runOutOfBandFilesystemMigration } from './lib/filesystem';
+import { AdManager } from './lib/ads/AdManager';
 
 export default function App() {
   React.useEffect(() => {
@@ -154,6 +155,7 @@ export default function App() {
 
     // Trigger Out-Of-Band migration for legacy Base64 documents -> Disk
     runOutOfBandFilesystemMigration();
+    AdManager.initialize();
   }, []);
 
   return (
@@ -162,6 +164,7 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
 
 
 

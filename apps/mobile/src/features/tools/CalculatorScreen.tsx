@@ -2,8 +2,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
+import { useBannerAd } from '../../hooks/useBannerAd';
 
 export function CalculatorScreen() {
+  useBannerAd();
   const [displayValue, setDisplayValue] = useState<string>('0');
   const [previousValue, setPreviousValue] = useState<string | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
@@ -218,3 +220,4 @@ export function CalculatorScreen() {
     </div>
   );
 }
+

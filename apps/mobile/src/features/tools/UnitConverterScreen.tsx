@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowDownUp, Ruler, Weight, Thermometer } from 'lucide-react';
 import { Card, Input, Label } from '@student-os/ui';
 import { hapticImpact } from '../../lib/haptics';
+import { useBannerAd } from '../../hooks/useBannerAd';
 
 const CATEGORIES = {
   length: {
@@ -50,6 +51,7 @@ const CATEGORIES = {
 type Category = keyof typeof CATEGORIES;
 
 export function UnitConverterScreen() {
+  useBannerAd();
   const [category, setCategory] = useState<Category>('length');
   const [fromUnit, setFromUnit] = useState<string>(CATEGORIES.length.defaultFrom);
   const [toUnit, setToUnit] = useState<string>(CATEGORIES.length.defaultTo);
@@ -195,4 +197,5 @@ export function UnitConverterScreen() {
     </div>
   );
 }
+
 

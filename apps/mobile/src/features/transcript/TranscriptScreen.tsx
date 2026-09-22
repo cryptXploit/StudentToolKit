@@ -10,12 +10,14 @@ import { deleteSemesterCascade } from '../../lib/cascade';
 import { Link } from 'react-router-dom';
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 import { calculateSemesterGPA } from '@student-os/engine';
+import { useBannerAd } from '../../hooks/useBannerAd';
 
 function generateSafeId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
 export function TranscriptScreen() {
+  useBannerAd();
   const [activeTab, setActiveTab] = useState<'terms' | 'cumulative'>('terms');
   
   const [newSemesterName, setNewSemesterName] = useState('');
@@ -335,3 +337,4 @@ export function TranscriptScreen() {
     </div>
   );
 }
+

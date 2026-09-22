@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus, Timer, ArrowLeftRight, Clock } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
+import { useBannerAd } from '../../hooks/useBannerAd';
 
 export function ToolsScreen() {
+  useBannerAd();
   const tools: Array<{ id: string; title: string; description: string; icon: any; path: string; color: string; bg: string; disabled?: boolean }> = [
     {
       id: 'vault',
@@ -167,6 +169,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 
