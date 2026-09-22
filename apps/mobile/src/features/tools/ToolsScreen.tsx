@@ -1,11 +1,20 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers, FolderLock } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
 export function ToolsScreen() {
   const tools = [
+    {
+      id: 'vault',
+      title: 'Document Vault',
+      description: 'Manage all offline academic files',
+      icon: FileText,
+      path: '/tools/vault',
+      color: 'text-amber-500',
+      bg: 'bg-amber-50 dark:bg-amber-950/30'
+    },
     {
       id: 'cumulative-cgpa',
       title: 'Cumulative CGPA',
@@ -26,7 +35,7 @@ export function ToolsScreen() {
     },
     {
       id: 'target-gpa',
-      title: 'Target CGPA Simulator',
+      title: 'Target CGPA Calculator',
       description: 'Find out exactly what you need in your remaining credits.',
       icon: Target,
       path: '/tools/target-gpa',
@@ -43,13 +52,24 @@ export function ToolsScreen() {
       bg: 'bg-emerald-50 dark:bg-emerald-950/30'
     },
     {
-      id: 'vault',
-      title: 'Document Vault',
-      description: 'Secure, offline storage for IDs and admit cards.',
-      icon: FolderLock,
-      path: '/tools/vault',
-      color: 'text-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-950/30'
+      id: 'timetable',
+      title: 'Timetable Builder',
+      description: 'Visually organize your weekly classes.',
+      icon: Calendar,
+      path: '#',
+      color: 'text-pink-500',
+      bg: 'bg-pink-50 dark:bg-pink-950/30',
+      disabled: true
+    },
+    {
+      id: 'what-if',
+      title: 'Academic What-If',
+      description: 'Simulate scenarios and dropped courses.',
+      icon: HelpCircle,
+      path: '#',
+      color: 'text-orange-500',
+      bg: 'bg-orange-50 dark:bg-orange-950/30',
+      disabled: true
     }
   ];
 
@@ -63,24 +83,43 @@ export function ToolsScreen() {
   return (
     <div className="p-4 sm:p-6 max-w-md mx-auto">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Utility Tools</h1>
-        <p className="text-muted-foreground text-sm mt-1">Calculators and decision engines.</p>
+        <h1 className="text-2xl font-bold text-foreground">Student Tools</h1>
+        <p className="text-muted-foreground text-sm mt-1">Calculators and everyday utilities.</p>
       </header>
       
       <div className="grid gap-4">
         {tools.map((tool) => {
           const Icon = tool.icon;
+          const CardContent = (
+            <Card className={`flex items-center p-4 ${tool.disabled ? 'opacity-60' : ''}`}>
+              <div className={`p-3 rounded-xl mr-4 ${tool.bg}`}>
+                <Icon className={tool.color} size={24} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">{tool.title}</h3>
+                  {tool.disabled && (
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                      Coming Soon
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">{tool.description}</p>
+              </div>
+            </Card>
+          );
+
+          if (tool.disabled) {
+            return (
+              <div key={tool.id} className="cursor-not-allowed">
+                {CardContent}
+              </div>
+            );
+          }
+
           return (
             <Link key={tool.id} to={tool.path} className="active:scale-[0.98] transition-transform block">
-              <Card className="flex items-center p-4">
-                <div className={`p-3 rounded-xl mr-4 ${tool.bg}`}>
-                  <Icon className={tool.color} size={24} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{tool.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">{tool.description}</p>
-                </div>
-              </Card>
+              {CardContent}
             </Link>
           );
         })}
@@ -91,3 +130,4 @@ export function ToolsScreen() {
     </div>
   );
 }
+
