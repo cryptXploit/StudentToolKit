@@ -1,7 +1,7 @@
 ﻿import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
-import { useAndroidBackButton } from './hooks/useAndroidBackButton';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Home, Calculator, Calendar, User, BookOpen } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -65,11 +65,39 @@ const ScreenLoader = () => (
   </div>
 );
 
+function NativeBackButtonHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const rootPaths = ['/', '/transcript', '/tools', '/profile'];
+    
+    const listener = CapacitorApp.addListener('backButton', () => {
+      if (rootPaths.includes(location.pathname)) {
+        try {
+          CapacitorApp.minimizeApp();
+        } catch (e) {
+          console.log('minimizeApp is only supported natively on Android', e);
+        }
+      } else {
+        navigate(-1);
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove()).catch(console.error);
+    };
+  }, [location, navigate]);
+
+  return null;
+}
+
 function AppRouterContent() {
-  useAndroidBackButton();
+
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background pt-safe">
+      <NativeBackButtonHandler />
       <main className="flex-1 overflow-y-auto relative">
         <GlobalErrorBoundary>
           <Suspense fallback={<ScreenLoader />}>
@@ -134,6 +162,9 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+
+
 
 
 
