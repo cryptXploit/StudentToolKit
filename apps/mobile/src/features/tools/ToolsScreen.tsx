@@ -56,10 +56,9 @@ export function ToolsScreen() {
       title: 'Timetable Builder',
       description: 'Visually organize your weekly classes.',
       icon: Calendar,
-      path: '#',
+      path: '/tools/timetable',
       color: 'text-pink-500',
-      bg: 'bg-pink-50 dark:bg-pink-950/30',
-      disabled: true
+      bg: 'bg-pink-50 dark:bg-pink-950/30'
     },
     {
       id: 'what-if',
@@ -130,5 +129,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
+
 
 
