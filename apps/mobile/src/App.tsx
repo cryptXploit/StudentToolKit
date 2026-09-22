@@ -13,6 +13,7 @@ const TargetCGPACalculatorScreen = lazy(() => import('./features/tools/TargetCGP
 const AttendanceScreen = lazy(() => import('./features/tools/AttendanceScreen').then(m => ({ default: m.AttendanceScreen })));
 const TimetableBuilderScreen = lazy(() => import('./features/tools/TimetableBuilderScreen').then(m => ({ default: m.TimetableBuilderScreen })));
 const AcademicWhatIfScreen = lazy(() => import('./features/tools/AcademicWhatIfScreen').then(m => ({ default: m.AcademicWhatIfScreen })));
+const BunkPlannerScreen = lazy(() => import('./features/tools/BunkPlannerScreen').then(m => ({ default: m.BunkPlannerScreen })));
 const SemesterGPAScreen = lazy(() => import('./features/tools/SemesterGPAScreen').then(m => ({ default: m.SemesterGPAScreen })));
 const CumulativeCGPAScreen = lazy(() => import('./features/tools/CumulativeCGPAScreen').then(m => ({ default: m.CumulativeCGPAScreen })));
 const PlannerScreen = lazy(() => import('./features/planner/PlannerScreen').then(m => ({ default: m.PlannerScreen })));
@@ -77,6 +78,7 @@ function AppRouterContent() {
               <Route path="/tools/target-cgpa" element={<TargetCGPACalculatorScreen />} />
               <Route path="/tools/timetable" element={<TimetableBuilderScreen />} />
               <Route path="/tools/what-if" element={<AcademicWhatIfScreen />} />
+              <Route path="/tools/bunk-planner" element={<BunkPlannerScreen />} />
               <Route path="/tools/semester-gpa" element={<SemesterGPAScreen />} />
               <Route path="/tools/cumulative-cgpa" element={<CumulativeCGPAScreen />} />
               <Route path="/tools/attendance" element={<AttendanceScreen />} />
@@ -124,6 +126,8 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+
 
 
 

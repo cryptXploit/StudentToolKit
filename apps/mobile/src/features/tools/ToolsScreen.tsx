@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText } from 'lucide-react';
+import { Target, CheckSquare, Calculator, Layers, Calendar, HelpCircle, FileText, UserMinus } from 'lucide-react';
 import { showToolsBanner, hideToolsBanner } from '../../lib/ads';
 import { Card } from '@student-os/ui';
 
@@ -60,6 +60,15 @@ export function ToolsScreen() {
       color: 'text-pink-500',
       bg: 'bg-pink-50 dark:bg-pink-950/30'
     },
+      {
+        id: 'bunk-planner',
+        title: 'Bunk Planner',
+        description: 'Simulate absences and test attendance limits.',
+        icon: UserMinus,
+        path: '/tools/bunk-planner',
+        color: 'text-red-500',
+        bg: 'bg-red-50 dark:bg-red-950/30'
+      },
     {
       id: 'what-if',
       title: 'Academic What-If',
@@ -122,6 +131,7 @@ export function ToolsScreen() {
     </div>
   );
 }
+
 
 
 
