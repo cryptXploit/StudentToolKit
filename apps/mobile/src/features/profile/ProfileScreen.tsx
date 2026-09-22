@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
-import { generateEcosystemBackup, restoreEcosystemBackup } from '../../lib/backup';
+import { exportData, importData } from '@student-os/storage';
 import { runOutOfBandFilesystemMigration } from '../../lib/filesystem';
 import { GraduationCap, BookOpen, Target, Hash, Check, Download, Upload, Shield, RefreshCcw } from 'lucide-react';
 import { Button, Card, Input, Label } from '@student-os/ui';
@@ -85,10 +85,20 @@ export function ProfileScreen() {
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleExport = async () => {
+    const handleExport = async () => {
     try {
       hapticImpact('light');
-      await generateEcosystemBackup();
+      const backupObj = await exportData();
+      const jsonString = JSON.stringify(backupObj, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "prepia_backup_" + new Date().toISOString().split('T')[0] + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (e) {
       alert('Failed to export data.');
     }
@@ -104,13 +114,24 @@ export function ProfileScreen() {
     }
 
     try {
-      await restoreEcosystemBackup(file);
-      hapticImpact('medium');
-      alert('Ecosystem restored successfully! Please restart the app or navigate to Home.');
-      window.location.reload(); // Force reload to re-mount live queries
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const jsonString = event.target?.result as string;
+          const parsed = JSON.parse(jsonString);
+          await importData(parsed);
+          hapticImpact('medium');
+          alert('Data restored successfully!');
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          alert('Invalid backup file.');
+        }
+      };
+      reader.readAsText(file);
     } catch (err) {
       console.error(err);
-      alert('Failed to restore data. Invalid backup file.');
+      alert('Failed to read file.');
     }
     
     // Reset input
@@ -321,17 +342,17 @@ export function ProfileScreen() {
           Your data is stored securely on your device. Export a backup before uninstalling or moving to a new phone.
         </p>
         
-        <div className="flex gap-3 mb-6">
+                <div className="flex gap-3 mb-6">
           <Button onClick={handleExport} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Download className="mr-2 text-primary" size={16} />
-            Export
+            Backup Data
           </Button>
           
-          <input type="file" accept=".zip" className="hidden" ref={fileInputRef} onChange={handleImport} />
+          <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
           
           <Button onClick={() => fileInputRef.current?.click()} variant="secondary" className="flex-1 py-2.5 text-sm">
             <Upload className="mr-2 text-primary" size={16} />
-            Restore
+            Restore Data
           </Button>
         </div>
 
@@ -369,3 +390,5 @@ export function ProfileScreen() {
     </div>
   );
 }
+
+
