@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateAttendancePercentage, calculateDaysRemaining, calculateAttendanceStatus, calculateSemesterGPA, calculateCumulativeCGPA } from '@student-os/engine';
 import { Card, Input, Button, Label } from '@student-os/ui';
-import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle, Folder, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Clock, MapPin, AlertCircle, CheckCircle, XCircle, Folder, ChevronRight, UserMinus, HelpCircle } from 'lucide-react';
 import { hapticImpact } from '../../lib/haptics';
 import { generateSafeId } from '../../lib/id';
 import { scheduleRoutineReminder, cancelRoutineReminder } from '../../lib/notifications';
@@ -560,8 +560,35 @@ export function CourseDetailScreen() {
         </Card>
       </div>
 
-      <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
-        <h3 className="text-sm font-medium text-foreground mb-1">Upcoming Assessments</h3>
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+          <h3 className="text-sm font-medium text-foreground mb-1">Decision Tools</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <Card 
+              className="p-4 flex flex-col items-start cursor-pointer active:scale-[0.98] transition-transform bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/50" 
+              onClick={() => { hapticImpact('light'); navigate('/tools/bunk-planner', { state: { courseId: course?.id } }); }}
+            >
+              <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-lg text-red-500 mb-3">
+                <UserMinus size={20} />
+              </div>
+              <span className="font-semibold text-foreground text-sm">Bunk Planner</span>
+              <span className="text-xs text-muted-foreground mt-1">Simulate absences</span>
+            </Card>
+            
+            <Card 
+              className="p-4 flex flex-col items-start cursor-pointer active:scale-[0.98] transition-transform bg-orange-50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/50" 
+              onClick={() => { hapticImpact('light'); navigate('/tools/what-if'); }}
+            >
+              <div className="bg-orange-100 dark:bg-orange-900/50 p-2 rounded-lg text-orange-500 mb-3">
+                <HelpCircle size={20} />
+              </div>
+              <span className="font-semibold text-foreground text-sm">What-If GPA</span>
+              <span className="text-xs text-muted-foreground mt-1">Simulate grades</span>
+            </Card>
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 pb-6">
+          <h3 className="text-sm font-medium text-foreground mb-1">Upcoming Assessments</h3>
         
         {courseEvents === undefined ? (
           <div className="flex justify-center p-8">
@@ -785,6 +812,8 @@ export function CourseDetailScreen() {
     </div>
   );
 }
+
+
 
 
 

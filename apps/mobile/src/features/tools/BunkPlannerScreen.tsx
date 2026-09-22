@@ -2,7 +2,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@student-os/storage';
 import { calculateAttendanceStatus } from '@student-os/engine';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, UserMinus, ShieldAlert, CheckCircle2, TrendingDown } from 'lucide-react';
 import { Card, Input, Label } from '@student-os/ui';
 
@@ -15,7 +15,8 @@ export function BunkPlannerScreen() {
     return allCourses.filter(c => c.semesterId === profile?.activeSemesterId);
   }, [allCourses, profile?.activeSemesterId]);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const location = useLocation();
+  const [selectedCourseId, setSelectedCourseId] = useState<string>((location.state as any)?.courseId || '');
   const [targetOverride, setTargetOverride] = useState<string>('');
   const [simulatedAbsences, setSimulatedAbsences] = useState<string>('');
 
@@ -199,4 +200,5 @@ export function BunkPlannerScreen() {
     </div>
   );
 }
+
 
